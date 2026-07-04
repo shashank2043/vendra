@@ -9,6 +9,7 @@ spring:
           enabled: true
           lower-case-service-id: true
       routes:
+        # Standard routing rules
         - id: auth-service
           uri: lb://auth-service
           predicates:
@@ -21,6 +22,74 @@ spring:
             - Path=/notifications/**
           filters:
             - StripPrefix=0
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/v1/products/**
+          filters:
+            - StripPrefix=0
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/v1/orders/**
+          filters:
+            - StripPrefix=0
+        - id: inventory-service
+          uri: lb://inventory-service
+          predicates:
+            - Path=/api/v1/inventory/**
+          filters:
+            - StripPrefix=0
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/users/**
+          filters:
+            - StripPrefix=0
+
+        # Swagger API documentation routing rules
+        - id: auth-service-swagger
+          uri: lb://auth-service
+          predicates:
+            - Path=/swagger/auth-service/**
+          filters:
+            - RewritePath=/swagger/auth-service/(?<segment>.*), /${segment}
+
+        - id: notification-service-swagger
+          uri: lb://notification-service
+          predicates:
+            - Path=/swagger/notification-service/**
+          filters:
+            - RewritePath=/swagger/notification-service/(?<segment>.*), /${segment}
+
+        - id: product-service-swagger
+          uri: lb://product-service
+          predicates:
+            - Path=/swagger/product-service/**
+          filters:
+            - RewritePath=/swagger/product-service/(?<segment>.*), /${segment}
+
+        - id: order-service-swagger
+          uri: lb://order-service
+          predicates:
+            - Path=/swagger/order-service/**
+          filters:
+            - RewritePath=/swagger/order-service/(?<segment>.*), /${segment}
+
+        - id: inventory-service-swagger
+          uri: lb://inventory-service
+          predicates:
+            - Path=/swagger/inventory-service/**
+          filters:
+            - RewritePath=/swagger/inventory-service/(?<segment>.*), /${segment}
+
+        - id: user-service-swagger
+          uri: lb://user-service
+          predicates:
+            - Path=/swagger/user-service/**
+          filters:
+            - RewritePath=/swagger/user-service/(?<segment>.*), /${segment}
+
       globalcors:
         cors-configurations:
           '[/**]':
@@ -35,3 +104,22 @@ spring:
             exposedHeaders:
               - Authorization
               - Set-Cookie
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: auth-service
+        url: /swagger/auth-service/v3/api-docs
+      - name: notification-service
+        url: /swagger/notification-service/v3/api-docs
+      - name: product-service
+        url: /swagger/product-service/v3/api-docs
+      - name: order-service
+        url: /swagger/order-service/v3/api-docs
+      - name: inventory-service
+        url: /swagger/inventory-service/v3/api-docs
+      - name: user-service
+        url: /swagger/user-service/v3/api-docs
+    config-url: /v3/api-docs/swagger-config
+  api-docs:
+    enabled: true

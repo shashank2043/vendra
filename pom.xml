@@ -26,12 +26,15 @@
     </properties>
 
     <modules>
-        <module>common-library</module>
         <module>config-server</module>
         <module>discovery-server</module>
         <module>api-gateway</module>
         <module>auth-service</module>
         <module>notification-service</module>
+        <module>product-service</module>
+        <module>order-service</module>
+        <module>inventory-service</module>
+        <module>user-service</module>
     </modules>
 
     <dependencyManagement>
@@ -106,12 +109,7 @@
                 <version>${springdoc.version}</version>
             </dependency>
 
-            <!-- Common Library Module -->
-            <dependency>
-                <groupId>com.pinnacle.vendra</groupId>
-                <artifactId>common-library</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
-            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
