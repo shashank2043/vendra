@@ -1,0 +1,459 @@
+{
+  "products": [
+    {
+      "id": "prod-1",
+      "name": "Hand-Thrown Ceramic Mug",
+      "description": "Individually hand-crafted ceramic mug made of durable stoneware. Finished with a satin-matte speckled glaze. Perfect for your morning coffee or artisanal tea. Microwave and dishwasher safe.",
+      "price": 32,
+      "categoryId": "cat-1",
+      "imageUrls": [
+        "/images/ceramic_mug.jpg"
+      ],
+      "vendorId": "vp-1",
+      "stock": 15,
+      "rating": 4.8,
+      "moderationStatus": "APPROVED",
+      "tags": [
+        "ceramic",
+        "mug",
+        "handmade"
+      ]
+    },
+    {
+      "id": "prod-2",
+      "name": "Minimalist Linen Cushion Cover",
+      "description": "Woven from 100% organic European flax. This linen cushion cover brings a textured, relaxed aesthetic to your living space. Pre-washed for exceptional softness.",
+      "price": 45,
+      "categoryId": "cat-1",
+      "imageUrls": [
+        "/images/ceramic_mug.jpg"
+      ],
+      "vendorId": "vp-1",
+      "stock": 3,
+      "rating": 4.5,
+      "moderationStatus": "APPROVED",
+      "tags": [
+        "pillow",
+        "linen",
+        "decor"
+      ]
+    },
+    {
+      "id": "prod-3",
+      "name": "Handcrafted Leather Tote Bag",
+      "description": "Constructed from full-grain vegetable-tanned leather. Features an interior pocket for essentials and robust brass hardware. Designed to age beautifully and develop a unique patina over time.",
+      "price": 185,
+      "categoryId": "cat-2",
+      "imageUrls": [
+        "/images/leather_tote.jpg"
+      ],
+      "vendorId": "vp-3",
+      "stock": 8,
+      "rating": 4.9,
+      "moderationStatus": "APPROVED",
+      "tags": [
+        "bag",
+        "leather",
+        "tote"
+      ]
+    },
+    {
+      "id": "prod-4",
+      "name": "Brass Architect Table Lamp",
+      "description": "Adjustable solid brass table lamp with a heavy weighted base. Delivers warm, focused task lighting for reading or drafting. Adds an industrial yet refined touch to any workspace.",
+      "price": 210,
+      "categoryId": "cat-1",
+      "imageUrls": [
+        "/images/clay_planter.jpg"
+      ],
+      "vendorId": "vp-3",
+      "stock": 4,
+      "rating": 4.2,
+      "moderationStatus": "APPROVED",
+      "tags": [
+        "lamp",
+        "brass",
+        "lighting"
+      ]
+    },
+    {
+      "id": "prod-5",
+      "name": "Hardcover Linen Journal",
+      "description": "Contains 160 pages of 120gsm ink-proof cream paper. Bound in bookbinding linen with a ribbon placeholder and lay-flat binding. Ideal for sketching, planning, or bullet journaling.",
+      "price": 28,
+      "categoryId": "cat-3",
+      "imageUrls": [
+        "/images/vendra_hero.jpg"
+      ],
+      "vendorId": "vp-4",
+      "stock": 40,
+      "rating": 4.7,
+      "moderationStatus": "APPROVED",
+      "tags": [
+        "notebook",
+        "journal",
+        "stationery"
+      ]
+    },
+    {
+      "id": "prod-6",
+      "name": "Organic Arabica Coffee Beans (Single Origin)",
+      "description": "Medium roast single-origin beans sourced sustainably from smallholder farms in Colombia. Features flavor profiles of cocoa, caramel, and citrus. Freshly roasted in small batches.",
+      "price": 19,
+      "categoryId": "cat-4",
+      "imageUrls": [
+        "/images/ceramic_mug.jpg"
+      ],
+      "vendorId": "vp-4",
+      "stock": 50,
+      "rating": 4.6,
+      "moderationStatus": "APPROVED",
+      "tags": [
+        "coffee",
+        "beans",
+        "organic"
+      ]
+    },
+    {
+      "id": "prod-7",
+      "name": "Handmade Clay Planter",
+      "description": "Terracotta styled clay planter, organic shape with premium details. Moderation pending.",
+      "price": 38,
+      "categoryId": "cat-1",
+      "imageUrls": [
+        "/images/clay_planter.jpg"
+      ],
+      "vendorId": "vp-1",
+      "stock": 10,
+      "rating": 5,
+      "moderationStatus": "PENDING",
+      "tags": [
+        "planter",
+        "clay",
+        "garden"
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat-1",
+      "name": "Home & Living",
+      "imageUrl": "/images/ceramic_mug.jpg"
+    },
+    {
+      "id": "cat-2",
+      "name": "Apparel & Accessories",
+      "imageUrl": "/images/leather_tote.jpg"
+    },
+    {
+      "id": "cat-3",
+      "name": "Stationery & Craft",
+      "imageUrl": "/images/vendra_hero.jpg"
+    },
+    {
+      "id": "cat-4",
+      "name": "Gourmet Food",
+      "imageUrl": "/images/ceramic_mug.jpg"
+    }
+  ],
+  "cartItems": [],
+  "orders": [
+    {
+      "id": "ord-999-vp-1",
+      "parentOrderId": "ord-999",
+      "userId": "user-customer-1",
+      "userName": "John Customer",
+      "vendorId": "vp-1",
+      "items": [
+        {
+          "productId": "prod-1",
+          "name": "Hand-Thrown Ceramic Mug",
+          "price": 32,
+          "quantity": 1,
+          "vendorId": "vp-1",
+          "imageUrl": "/images/ceramic_mug.jpg"
+        }
+      ],
+      "total": 32,
+      "status": "DELIVERED",
+      "createdAt": "2026-06-25T14:30:00.000Z",
+      "shippingAddress": {
+        "fullName": "John Customer",
+        "addressLine1": "123 Main St",
+        "city": "Seattle",
+        "postalCode": "98101",
+        "country": "USA"
+      },
+      "paymentMethod": "Razorpay"
+    },
+    {
+      "id": "ord-1001-vp-1",
+      "parentOrderId": "ord-1001",
+      "userId": "user-customer-1",
+      "userName": "John Customer",
+      "vendorId": "vp-1",
+      "items": [
+        {
+          "productId": "prod-2",
+          "name": "Minimalist Linen Cushion Cover",
+          "price": 45,
+          "quantity": 2,
+          "vendorId": "vp-1",
+          "imageUrl": "/images/ceramic_mug.jpg"
+        }
+      ],
+      "total": 90,
+      "status": "PLACED",
+      "createdAt": "2026-07-04T08:15:00.000Z",
+      "shippingAddress": {
+        "fullName": "John Customer",
+        "addressLine1": "123 Main St",
+        "city": "Seattle",
+        "postalCode": "98101",
+        "country": "USA"
+      },
+      "paymentMethod": "Razorpay"
+    }
+  ],
+  "reviews": [
+    {
+      "id": "rev-1",
+      "productId": "prod-1",
+      "userId": "user-customer-1",
+      "userName": "John Customer",
+      "rating": 5,
+      "comment": "Absolutely beautiful mug. Keep my coffee warm and feels comfortable in my hands.",
+      "createdAt": "2026-06-28T10:00:00.000Z",
+      "reply": ""
+    }
+  ],
+  "wishlist": [],
+  "vendorProfiles": [
+    {
+      "id": "vp-1",
+      "userId": "user-vendor-1",
+      "businessName": "Aura Home Essentials",
+      "description": "Curated lifestyle objects crafted with a focus on form, function, and sustainable craftsmanship.",
+      "logoUrl": "/images/ceramic_mug.jpg",
+      "approvalStatus": "APPROVED",
+      "contactPhone": "+1 (555) 019-2834",
+      "warehouseAddress": "742 Evergreen Terrace, Springfield, OR 97477",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "vp-2",
+      "userId": "user-vendor-2",
+      "businessName": "Vendra Pending Seller",
+      "description": "Unique handcrafted goods looking to share with the world.",
+      "logoUrl": "",
+      "approvalStatus": "PENDING",
+      "contactPhone": "+1 (555) 012-3456",
+      "warehouseAddress": "123 Pending Lane, Approval City, AP 00000",
+      "createdAt": "2026-01-02T00:00:00.000Z"
+    },
+    {
+      "id": "vp-3",
+      "userId": "user-vendor-3",
+      "businessName": "Terra Ceramics",
+      "description": "Earthy, rustic ceramics and home decor items crafted in harmony with nature.",
+      "logoUrl": "/images/clay_planter.jpg",
+      "approvalStatus": "APPROVED",
+      "contactPhone": "+1 (555) 017-4839",
+      "warehouseAddress": "89 Clay Road, Sedona, AZ 86336",
+      "createdAt": "2026-01-10T00:00:00.000Z"
+    },
+    {
+      "id": "vp-4",
+      "userId": "user-vendor-4",
+      "businessName": "Scribe Stationery",
+      "description": "Premium papers, bound books, and writing tools designed to record your creative journey.",
+      "logoUrl": "/images/vendra_hero.jpg",
+      "approvalStatus": "APPROVED",
+      "contactPhone": "+1 (555) 014-9988",
+      "warehouseAddress": "12 Bindery Row, Boston, MA 02108",
+      "createdAt": "2026-01-15T00:00:00.000Z"
+    }
+  ],
+  "vendorApplications": [
+    {
+      "id": "va-1",
+      "userId": "user-vendor-2",
+      "businessName": "Vendra Pending Seller",
+      "contactPhone": "+1 (555) 012-3456",
+      "warehouseAddress": "123 Pending Lane, Approval City, AP 00000",
+      "status": "PENDING",
+      "createdAt": "2026-07-02T10:00:00.000Z"
+    }
+  ],
+  "inventory": [],
+  "commissionLedger": [
+    {
+      "id": "com-1",
+      "orderId": "ord-999-vp-1",
+      "vendorId": "vp-1",
+      "grossSales": 32,
+      "commissionRate": 0.15,
+      "commissionDeducted": 4.8,
+      "netPayout": 27.2,
+      "createdAt": "2026-06-25T14:30:00.000Z"
+    }
+  ],
+  "commissionRules": [
+    {
+      "id": "rule-1",
+      "categoryName": "Home & Living",
+      "commissionRate": 0.15
+    },
+    {
+      "id": "rule-2",
+      "categoryName": "Apparel & Accessories",
+      "commissionRate": 0.12
+    },
+    {
+      "id": "rule-3",
+      "categoryName": "Stationery & Craft",
+      "commissionRate": 0.1
+    }
+  ],
+  "trustScores": [
+    {
+      "id": "ts-1",
+      "vendorId": "vp-1",
+      "score": 94,
+      "fulfillmentRate": 98.2,
+      "avgDeliveryDelay": 1.1,
+      "complaintRatio": 1.5
+    }
+  ],
+  "disputes": [
+    {
+      "id": "disp-1",
+      "orderId": "ord-999-vp-1",
+      "customerName": "John Customer",
+      "vendorId": "vp-1",
+      "reason": "Artisanal mug arrived with minor scratch on glaze",
+      "status": "OPEN",
+      "createdAt": "2026-06-30T11:00:00.000Z",
+      "resolutionNotes": ""
+    }
+  ],
+  "platformUsers": [
+    {
+      "id": "user-admin-1",
+      "email": "admin@example.com",
+      "name": "Platform Admin",
+      "role": "ADMIN",
+      "picture": "",
+      "suspended": false
+    },
+    {
+      "id": "user-vendor-1",
+      "email": "vendor@example.com",
+      "name": "Aura Home Seller",
+      "role": "VENDOR",
+      "picture": "",
+      "suspended": false
+    },
+    {
+      "id": "user-vendor-2",
+      "email": "pending_vendor@example.com",
+      "name": "Pending Seller",
+      "role": "VENDOR",
+      "picture": "",
+      "suspended": false
+    },
+    {
+      "id": "user-vendor-3",
+      "email": "terra@example.com",
+      "name": "Terra Ceramics Seller",
+      "role": "VENDOR",
+      "picture": "",
+      "suspended": false
+    },
+    {
+      "id": "user-vendor-4",
+      "email": "scribe@example.com",
+      "name": "Scribe Stationery Seller",
+      "role": "VENDOR",
+      "picture": "",
+      "suspended": false
+    },
+    {
+      "id": "user-customer-1",
+      "email": "customer@example.com",
+      "name": "John Customer",
+      "role": "CUSTOMER",
+      "picture": "",
+      "suspended": false
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif-1",
+      "role": "CUSTOMER",
+      "userId": "user-customer-1",
+      "message": "Welcome to Vendra! Browse our collections and enjoy shopping.",
+      "read": true,
+      "createdAt": "2026-07-04T10:00:00.000Z"
+    },
+    {
+      "id": "notif-2",
+      "role": "VENDOR",
+      "userId": "user-vendor-1",
+      "message": "New Order #ord-1001-vp-1 received! Please confirm shipment availability.",
+      "read": false,
+      "createdAt": "2026-07-04T08:15:00.000Z"
+    }
+  ],
+  "analytics": [
+    {
+      "id": "an-1",
+      "vendorId": "vp-1",
+      "salesOverTime": [
+        {
+          "date": "06/28",
+          "sales": 180
+        },
+        {
+          "date": "06/29",
+          "sales": 240
+        },
+        {
+          "date": "06/30",
+          "sales": 150
+        },
+        {
+          "date": "07/01",
+          "sales": 320
+        },
+        {
+          "date": "07/02",
+          "sales": 280
+        },
+        {
+          "date": "07/03",
+          "sales": 450
+        },
+        {
+          "date": "07/04",
+          "sales": 320
+        }
+      ],
+      "categoryBreakdown": [
+        {
+          "name": "Home & Living",
+          "value": 550
+        },
+        {
+          "name": "Apparel & Accessories",
+          "value": 240
+        },
+        {
+          "name": "Stationery & Craft",
+          "value": 180
+        }
+      ]
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}

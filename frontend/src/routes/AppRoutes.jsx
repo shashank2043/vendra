@@ -1,54 +1,91 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAppSelector } from '../app/hooks';
+import ProtectedRoute from '../guards/ProtectedRoute';
+import RoleRoute from '../guards/RoleRoute';
 
-// Layouts
-import DashboardLayout from '../layouts/DashboardLayout';
-
-// Pages
-import LandingPage from '../pages/LandingPage';
 import LoginPage from '../pages/LoginPage';
-import RegisterPage from '../pages/RegisterPage';
-import ForgotPasswordPage from '../pages/ForgotPasswordPage';
-import ResetPasswordPage from '../pages/ResetPasswordPage';
-import DashboardPage from '../pages/DashboardPage';
-import NotificationLogPage from '../pages/NotificationLogPage';
-import ProfilePage from '../pages/ProfilePage';
-import SettingsPage from '../pages/SettingsPage';
-import Error404Page from '../pages/Error404Page';
-import Error403Page from '../pages/Error403Page';
+import AccessDeniedPage from '../pages/AccessDeniedPage';
+import PendingApprovalPage from '../pages/PendingApprovalPage';
 
-// Guards
-import ProtectedRoute from './ProtectedRoute';
-import GuestRoute from './GuestRoute';
+import CustomerRoutes from './CustomerRoutes';
+import VendorRoutes from './VendorRoutes';
+import AdminRoutes from './AdminRoutes';
+
+const HomeRedirect = () => {
+  const { isAuthenticated, role, user } = useAppSelector((state) => state.auth);
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (role === 'ADMIN') {
+    return <Navigate to="/admin" replace />;
+  } else if (role === 'VENDOR') {
+    if (user?.approvalStatus !== 'APPROVED') {
+      return <Navigate to="/pending-approval" replace />;
+    }
+    return <Navigate to="/vendor" replace />;
+  } else {
+    return <Navigate to="/customer" replace />;
+  }
+};
 
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Public Pages */}
-      <Route path="/" element={<LandingPage />} />
+      {/* Public Routes */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/access-denied" element={<AccessDeniedPage />} />
 
-      {/* Guest Only Routes (Login, Signup etc) */}
-      <Route element={<GuestRoute />}>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-      </Route>
-
-      {/* Protected Routes (Dashboard Layout Console) */}
+      {/* Protected Routes */}
       <Route element={<ProtectedRoute />}>
-        <Route path="/dashboard" element={<DashboardLayout />}>
-          <Route index element={<DashboardPage />} />
-          <Route path="notifications" element={<NotificationLogPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="settings" element={<SettingsPage />} />
-        </Route>
+        {/* Portal Root Redirect */}
+        <Route path="/" element={<HomeRedirect />} />
+        
+        {/* Pending Approval Page */}
+        <Route 
+          path="/pending-approval" 
+          element={
+            <RoleRoute allowedRoles={['VENDOR']}>
+              <PendingApprovalPage />
+            </RoleRoute>
+          } 
+        />
+
+        {/* Customer Portal Routes */}
+        <Route 
+          path="/customer/*" 
+          element={
+            <RoleRoute allowedRoles={['CUSTOMER']}>
+              <CustomerRoutes />
+            </RoleRoute>
+          } 
+        />
+
+        {/* Vendor Portal Routes */}
+        <Route 
+          path="/vendor/*" 
+          element={
+            <RoleRoute allowedRoles={['VENDOR']}>
+              <VendorRoutes />
+            </RoleRoute>
+          } 
+        />
+
+        {/* Admin Portal Routes */}
+        <Route 
+          path="/admin/*" 
+          element={
+            <RoleRoute allowedRoles={['ADMIN']}>
+              <AdminRoutes />
+            </RoleRoute>
+          } 
+        />
       </Route>
 
-      {/* Error Routes */}
-      <Route path="/403" element={<Error403Page />} />
-      <Route path="/404" element={<Error404Page />} />
-      <Route path="*" element={<Navigate to="/404" replace />} />
+      {/* Catch-all Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };
