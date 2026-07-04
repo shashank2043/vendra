@@ -1,0 +1,96 @@
+{
+  "id": "vendra",
+  "realm": "vendra",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "ROLE_CUSTOMER",
+        "description": "Customer Role"
+      },
+      {
+        "name": "ROLE_ADMIN",
+        "description": "Administrator Role"
+      },
+      {
+        "name": "ROLE_VENDOR",
+        "description": "Vendor Role"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "vendra-client",
+      "name": "Vendra Backend Client",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "vendra-client-secret",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": true,
+      "redirectUris": [
+        "*"
+      ],
+      "webOrigins": [
+        "*"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "email": "admin@vendra.com",
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_CUSTOMER",
+        "ROLE_ADMIN"
+      ]
+    },
+    {
+      "username": "user",
+      "enabled": true,
+      "email": "user@vendra.com",
+      "emailVerified": true,
+      "firstName": "Customer",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_CUSTOMER"
+      ]
+    },
+    {
+      "username": "vendor",
+      "enabled": true,
+      "email": "vendor@vendra.com",
+      "emailVerified": true,
+      "firstName": "Vendor",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_VENDOR"
+      ]
+    }
+  ]
+}

@@ -112,7 +112,7 @@ const DashboardLayout = () => {
             {user?.username || 'Vendra User'}
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', noWrap: true }}>
-            {user?.roles?.[0] || 'ROLE_USER'}
+            {user?.roles?.[0] || 'ROLE_CUSTOMER'}
           </Typography>
         </Box>
       </Box>
