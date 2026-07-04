@@ -1,84 +1,45 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { BrowserRouter } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter, useLocation } from 'react-router-dom';
 import AppRoutes from './routes/AppRoutes';
-import Toast from './components/Toast';
-import GlobalLoader from './components/Loader';
-import { setToken, loginSuccess, logoutSuccess } from './redux/slices/authSlice';
-import api from './services/api';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import useNotificationPolling from './hooks/useNotificationPolling';
+
+// Scroll to top utility component that fires on every route change
+const ScrollToTop = () => {
+  const { pathname, search } = useLocation();
+  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname, search]);
+  
+  return null;
+};
+
+// Poller component to call the notifications hook in the React tree
+const NotificationPoller = () => {
+  useNotificationPolling();
+  return null;
+};
 
 const App = () => {
-  const dispatch = useDispatch();
-  const [initializing, setInitializing] = useState(true);
-
-  // Perform silent refresh on application startup to restore session from cookie
-  useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        // Ping refresh endpoint. If refresh token cookie exists, we get new access token
-        const response = await api.post('/auth/refresh');
-        const { accessToken } = response.data.data;
-        
-        // Load user profile with new access token
-        const profile = await api.get('/auth/profile', {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        });
-
-        dispatch(loginSuccess({
-          accessToken,
-          user: profile.data.data
-        }));
-      } catch (e) {
-        console.log('No active session found on startup.');
-        dispatch(logoutSuccess());
-      } finally {
-        setInitializing(false);
-      }
-    };
-
-    initializeAuth();
-  }, [dispatch]);
-
-  if (initializing) {
-    // Elegant center loading screen during boot initialization
-    return (
-      <div style={{
-        display: 'flex',
-        height: '100vh',
-        width: '100vw',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#0b0f19',
-        color: '#fff',
-        fontFamily: 'sans-serif'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            border: '4px solid rgba(255,255,255,0.1)',
-            borderTop: '4px solid #6366f1',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 16px auto'
-          }} />
-          <style>{`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}</style>
-          <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#9ca3af', letterSpacing: '1px' }}>INITIALIZING CONSOLE</div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <BrowserRouter>
+      <ScrollToTop />
+      <NotificationPoller />
       <AppRoutes />
-      <Toast />
-      <GlobalLoader />
+      <ToastContainer
+        position="top-right"
+        autoClose={4000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </BrowserRouter>
   );
 };

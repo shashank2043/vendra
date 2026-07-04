@@ -1,17 +1,20 @@
-# React UI Console
+# Vendra Frontend Portal
 
-React 19 + Vite frontend dashboard. It features dark/light mode switches, silent cookie refresh checks, form validations, and routing panels.
+Vendra is a multi-vendor e-commerce order management platform, built as a single React app with three role-based portals: Customer, Vendor, and Admin.
 
 ## Folder Structure
-* `components/`: Toast snackbars, loading overlays, PasswordField toggle, SearchBox, StatusBadge, ProfileMenu.
-* `contexts/`: ThemeContext setting custom Material UI v6 styling (fonts, button gradients, glassmorphism card, border radiuses).
-* `layouts/`: DashboardLayout wrapping Sidebar, AppBar, Breadcrumbs, and content outlets.
-* `pages/`: Hero marketing views, forms, logs tables, profile configs, error templates.
-* `redux/`: Slices managing tokens (auth), loading state, sidebar toggle (ui), and alerts (notifications).
-* `services/`: Axios wrapper intercepting requests to bind tokens and capture refreshes.
+* `src/api/`: Centralized API service configuration (`axiosInstance.js`) and namespaced folders for customer, vendor, and admin.
+* `src/app/`: Redux store configuration and custom hooks.
+* `src/features/`: Module features including Auth (Google Login & Guest mode) and Notifications (polling).
+* `src/components/common/`: Shared layout and component systems (Buttons, Badges, Ratings, Spinners, ConfirmDialogs).
+* `src/guards/`: Authorization guards (`ProtectedRoute`, `RoleRoute`).
+* `src/theme/`: Editorial Material UI theme configuration.
+* `src/pages/`: Global pages (`LoginPage`, `AccessDeniedPage`, `PendingApprovalPage`).
+* `src/routes/`: Router tables dividing the app into Customer, Vendor, and Admin pathways.
 
 ## Commands
 Inside the `frontend` folder, execute:
 * `npm install`: Install dependencies.
-* `npm run dev`: Boot local web server on port `3000`.
-* `npm run build`: Package bundle inside `/dist` directory.
+* `npm run dev`: Boot local Vite dev server.
+* `npm run mock-api`: Boot json-server mock database on port `4000`.
+* `npm run build`: Package bundle for production.
