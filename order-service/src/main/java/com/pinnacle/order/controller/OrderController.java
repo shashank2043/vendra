@@ -44,7 +44,7 @@ public class OrderController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get order details by ID")
-    public ResponseEntity<ApiResponse<OrderResponse>> getOrderById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<OrderResponse>> getOrderById(@PathVariable("id") Long id) {
         OrderResponse response = orderService.getOrderById(id);
         return ResponseEntity.ok(ApiResponse.success(response, "Order retrieved successfully"));
     }

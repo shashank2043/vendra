@@ -1,14 +1,13 @@
 package com.pinnacle.auth.service;
 
+import com.pinnacle.auth.client.UserServiceClient;
 import com.pinnacle.auth.dto.*;
-import com.pinnacle.auth.entity.RefreshToken;
 import com.pinnacle.auth.entity.Role;
 import com.pinnacle.auth.entity.User;
 import com.pinnacle.auth.mapper.UserMapper;
 import com.pinnacle.auth.repository.RefreshTokenRepository;
 import com.pinnacle.auth.repository.RoleRepository;
 import com.pinnacle.auth.repository.UserRepository;
-import com.pinnacle.auth.dto.UserDto;
 import com.pinnacle.auth.exception.BadRequestException;
 import com.pinnacle.auth.exception.ResourceNotFoundException;
 import com.pinnacle.auth.exception.UnauthorizedException;
@@ -24,7 +23,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -37,6 +35,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtils jwtUtils;
     private final UserMapper userMapper;
     private final RestTemplate restTemplate;
+    private final UserServiceClient userServiceClient;
 
     @Value("${keycloak.auth-server-url:http://localhost:8080}")
     private String keycloakAuthServerUrl;
@@ -65,7 +64,8 @@ public class AuthServiceImpl implements AuthService {
                             PasswordEncoder passwordEncoder,
                             JwtUtils jwtUtils,
                             UserMapper userMapper,
-                            RestTemplate restTemplate) {
+                            RestTemplate restTemplate,
+                            UserServiceClient userServiceClient) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.refreshTokenRepository = refreshTokenRepository;
@@ -73,6 +73,7 @@ public class AuthServiceImpl implements AuthService {
         this.jwtUtils = jwtUtils;
         this.userMapper = userMapper;
         this.restTemplate = restTemplate;
+        this.userServiceClient = userServiceClient;
     }
 
     private String getAdminToken() {
@@ -100,7 +101,7 @@ public class AuthServiceImpl implements AuthService {
         throw new UnauthorizedException("Failed to retrieve admin token from Keycloak");
     }
 
-    private void registerUserInKeycloak(String username, String email, String password, String role) {
+    private void registerUserInKeycloak(String username, String email, String password, String role, boolean enabled) {
         String adminToken = getAdminToken();
         String createUserUrl = String.format("%s/admin/realms/%s/users", keycloakAuthServerUrl, keycloakRealm);
         
@@ -117,7 +118,7 @@ public class AuthServiceImpl implements AuthService {
         Map<String, Object> userBody = new HashMap<>();
         userBody.put("username", username);
         userBody.put("email", email);
-        userBody.put("enabled", true);
+        userBody.put("enabled", enabled);
         userBody.put("credentials", Collections.singletonList(credential));
         
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(userBody, headers);
@@ -176,6 +177,33 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    private void updateKeycloakUserEnabledStatus(String username, boolean enabled) {
+        String adminToken = getAdminToken();
+        String searchUrl = String.format("%s/admin/realms/%s/users?username=%s", keycloakAuthServerUrl, keycloakRealm, username);
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(adminToken);
+        
+        HttpEntity<Void> searchRequest = new HttpEntity<>(headers);
+        try {
+            ResponseEntity<List> searchResponse = restTemplate.exchange(searchUrl, HttpMethod.GET, searchRequest, List.class);
+            if (searchResponse.getStatusCode().is2xxSuccessful() && searchResponse.getBody() != null && !searchResponse.getBody().isEmpty()) {
+                Map<String, Object> kcUser = (Map<String, Object>) searchResponse.getBody().get(0);
+                String kcUserId = (String) kcUser.get("id");
+                
+                String updateUrl = String.format("%s/admin/realms/%s/users/%s", keycloakAuthServerUrl, keycloakRealm, kcUserId);
+                Map<String, Object> updateBody = new HashMap<>();
+                updateBody.put("enabled", enabled);
+                
+                HttpEntity<Map<String, Object>> updateRequest = new HttpEntity<>(updateBody, headers);
+                restTemplate.exchange(updateUrl, HttpMethod.PUT, updateRequest, Void.class);
+            }
+        } catch (Exception e) {
+            throw new BadRequestException("Failed to update user enabled status in Keycloak: " + e.getMessage());
+        }
+    }
+
     @Override
     public UserDto register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -189,7 +217,7 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException("Default Customer Role not found"));
 
         // Register in Keycloak first
-        registerUserInKeycloak(request.getUsername(), request.getEmail(), request.getPassword(), "ROLE_CUSTOMER");
+        registerUserInKeycloak(request.getUsername(), request.getEmail(), request.getPassword(), "ROLE_CUSTOMER", true);
 
         // Save locally to keep in sync with local DB
         User user = User.builder()
@@ -201,7 +229,115 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         User savedUser = userRepository.save(user);
+
+        // Call user-service via Feign to create default profile
+        try {
+            UserProfileCreateRequest profileReq = UserProfileCreateRequest.builder()
+                    .userId(savedUser.getId())
+                    .username(savedUser.getUsername())
+                    .email(savedUser.getEmail())
+                    .role("CUSTOMER")
+                    .approved(true)
+                    .build();
+            userServiceClient.createProfile(profileReq);
+        } catch (Exception e) {
+            // Log and allow flow to finish
+        }
+
         return userMapper.toDto(savedUser);
+    }
+
+    @Override
+    public UserDto registerCustomer(CustomerRegisterRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new BadRequestException("Username is already taken");
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new BadRequestException("Email is already registered");
+        }
+
+        Role customerRole = roleRepository.findByName("ROLE_CUSTOMER")
+                .orElseThrow(() -> new ResourceNotFoundException("Default Customer Role not found"));
+
+        registerUserInKeycloak(request.getUsername(), request.getEmail(), request.getPassword(), "ROLE_CUSTOMER", true);
+
+        User user = User.builder()
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .enabled(true)
+                .roles(Set.of(customerRole))
+                .build();
+
+        User savedUser = userRepository.save(user);
+
+        // Call user-service via Feign to create customer profile
+        UserProfileCreateRequest profileReq = UserProfileCreateRequest.builder()
+                .userId(savedUser.getId())
+                .username(savedUser.getUsername())
+                .email(savedUser.getEmail())
+                .role("CUSTOMER")
+                .approved(true)
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .shippingAddress(request.getShippingAddress())
+                .phoneNumber(request.getPhoneNumber())
+                .build();
+        userServiceClient.createProfile(profileReq);
+
+        return userMapper.toDto(savedUser);
+    }
+
+    @Override
+    public UserDto registerVendor(VendorRegisterRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new BadRequestException("Username is already taken");
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new BadRequestException("Email is already registered");
+        }
+
+        Role vendorRole = roleRepository.findByName("ROLE_VENDOR")
+                .orElseThrow(() -> new ResourceNotFoundException("Default Vendor Role not found"));
+
+        registerUserInKeycloak(request.getUsername(), request.getEmail(), request.getPassword(), "ROLE_VENDOR", false);
+
+        User user = User.builder()
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .enabled(false)
+                .roles(Set.of(vendorRole))
+                .build();
+
+        User savedUser = userRepository.save(user);
+
+        // Call user-service via Feign to create vendor profile
+        UserProfileCreateRequest profileReq = UserProfileCreateRequest.builder()
+                .userId(savedUser.getId())
+                .username(savedUser.getUsername())
+                .email(savedUser.getEmail())
+                .role("VENDOR")
+                .approved(false)
+                .businessName(request.getBusinessName())
+                .businessAddress(request.getBusinessAddress())
+                .taxId(request.getTaxId())
+                .phoneNumber(request.getPhoneNumber())
+                .build();
+        userServiceClient.createProfile(profileReq);
+
+        return userMapper.toDto(savedUser);
+    }
+
+    @Override
+    public void updateActivation(Long id, boolean enabled) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
+        
+        user.setEnabled(enabled);
+        userRepository.save(user);
+
+        updateKeycloakUserEnabledStatus(user.getUsername(), enabled);
     }
 
     @Override

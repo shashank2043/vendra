@@ -8,16 +8,12 @@ import com.pinnacle.auth.dto.UserDto;
 import com.pinnacle.auth.exception.BadRequestException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Arrays;
 
 @RestController
 @RequestMapping("/auth")
@@ -35,6 +31,20 @@ public class AuthController {
     public ResponseEntity<ApiResponse<UserDto>> register(@Valid @RequestBody RegisterRequest request) {
         UserDto registeredUser = authService.register(request);
         return ResponseEntity.ok(ApiResponse.success(registeredUser, "User registered successfully"));
+    }
+
+    @PostMapping("/register/customer")
+    @Operation(summary = "Register a new customer")
+    public ResponseEntity<ApiResponse<UserDto>> registerCustomer(@Valid @RequestBody CustomerRegisterRequest request) {
+        UserDto registeredUser = authService.registerCustomer(request);
+        return ResponseEntity.ok(ApiResponse.success(registeredUser, "Customer registered successfully. Direct login is active."));
+    }
+
+    @PostMapping("/register/vendor")
+    @Operation(summary = "Register a new vendor (requires admin approval)")
+    public ResponseEntity<ApiResponse<UserDto>> registerVendor(@Valid @RequestBody VendorRegisterRequest request) {
+        UserDto registeredUser = authService.registerVendor(request);
+        return ResponseEntity.ok(ApiResponse.success(registeredUser, "Vendor registration submitted. Please wait for administrator approval before logging in."));
     }
 
     @PostMapping("/login")
@@ -123,5 +133,14 @@ public class AuthController {
         }
         UserDto profile = authService.getUserProfile(username);
         return ResponseEntity.ok(ApiResponse.success(profile, "Profile retrieved successfully"));
+    }
+
+    @PutMapping("/users/{id}/activation")
+    @Operation(summary = "Update user activation status (Internal use only)")
+    public ResponseEntity<ApiResponse<Void>> updateActivation(
+            @PathVariable("id") Long id,
+            @RequestParam("enabled") boolean enabled) {
+        authService.updateActivation(id, enabled);
+        return ResponseEntity.ok(ApiResponse.success(null, "User activation updated successfully"));
     }
 }

@@ -42,7 +42,7 @@ public class InventoryController {
 
     @GetMapping("/product/{productId}")
     @Operation(summary = "Get stock by product ID")
-    public ResponseEntity<ApiResponse<InventoryResponse>> getStockByProductId(@PathVariable String productId) {
+    public ResponseEntity<ApiResponse<InventoryResponse>> getStockByProductId(@PathVariable("productId") String productId) {
         InventoryResponse response = inventoryService.getStockByProductId(productId);
         return ResponseEntity.ok(ApiResponse.success(response, "Stock retrieved successfully"));
     }

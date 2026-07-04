@@ -24,7 +24,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     // List of public endpoints that don't require JWT authentication
     private static final List<String> PUBLIC_ENDPOINTS = List.of(
             "/auth/login",
-            "/auth/register",
+            "/auth/register/**",
             "/auth/refresh",
             "/auth/logout",
             "/v3/api-docs/**",

@@ -44,7 +44,7 @@ public class ProductController {
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing product (Vendor only)")
     public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(
-            @PathVariable String id,
+            @PathVariable("id") String id,
             @Valid @RequestBody ProductRequest request,
             @RequestHeader("X-User-Name") String username,
             @RequestHeader("X-User-Roles") String roles) {
@@ -57,7 +57,7 @@ public class ProductController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a product (Vendor only)")
     public ResponseEntity<ApiResponse<Void>> deleteProduct(
-            @PathVariable String id,
+            @PathVariable("id") String id,
             @RequestHeader("X-User-Name") String username,
             @RequestHeader("X-User-Roles") String roles) {
         
@@ -68,7 +68,7 @@ public class ProductController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get product by ID")
-    public ResponseEntity<ApiResponse<ProductResponse>> getProductById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<ProductResponse>> getProductById(@PathVariable("id") String id) {
         ProductResponse response = productService.getProductById(id);
         return ResponseEntity.ok(ApiResponse.success(response, "Product retrieved successfully"));
     }
@@ -95,7 +95,7 @@ public class ProductController {
     @PostMapping("/{id}/moderate")
     @Operation(summary = "Moderate product approval status (Admin only)")
     public ResponseEntity<ApiResponse<ProductResponse>> moderateProduct(
-            @PathVariable String id,
+            @PathVariable("id") String id,
             @RequestParam boolean approved,
             @RequestParam(required = false) String comment,
             @RequestHeader("X-User-Roles") String roles) {
