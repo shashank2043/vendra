@@ -1,0 +1,27 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: native
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/shared
+        # Ready for Git configuration migration by uncommenting below:
+        # git:
+        #   uri: https://github.com/your-org/your-config-repo.git
+        #   search-paths: config-folder
+        #   clone-on-start: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,env
+  endpoint:
+    health:
+      show-details: always

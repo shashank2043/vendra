@@ -1,0 +1,24 @@
+# Ignore all environment configuration files containing sensitive credentials
+.env
+.env.local
+*.env.local
+
+# Maven build files
+target/
+**/target/
+**/*.class
+**/*.jar
+**/*.war
+
+# Node/React build files
+**/node_modules/
+**/dist/
+frontend/.env.development.local
+frontend/.env.production.local
+frontend/.env.local
+
+# IDE Specific directories
+.idea/
+.vscode/
+*.iml
+.DS_Store
