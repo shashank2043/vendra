@@ -45,6 +45,13 @@ const SearchResultsPage = () => {
     }
   }, [searchParams]);
 
+  // Price ceiling derived from the actual catalogue (was hard-capped at 300, which
+  // hid pricier products). Reset the selected range to the full span when it changes.
+  const maxPrice = Math.max(1000, Math.ceil(products.reduce((mx, p) => Math.max(mx, Number(p.price) || 0), 0) / 100) * 100);
+  useEffect(() => {
+    setPriceRange([0, maxPrice]);
+  }, [maxPrice]);
+
   const handleCategoryChange = (catId) => {
     setSelectedCategories(prev => 
       prev.includes(catId) ? prev.filter(id => id !== catId) : [...prev, catId]
@@ -53,7 +60,7 @@ const SearchResultsPage = () => {
 
   const handleClearFilters = () => {
     setSelectedCategories([]);
-    setPriceRange([0, 300]);
+    setPriceRange([0, maxPrice]);
     setMinRating(0);
     setSearchParams({});
   };
@@ -67,7 +74,7 @@ const SearchResultsPage = () => {
       if (!matchesName && !matchesDesc) return false;
     }
 
-    if (selectedCategories.length > 0 && !selectedCategories.includes(product.categoryId)) {
+    if (selectedCategories.length > 0 && !selectedCategories.includes(product.category)) {
       return false;
     }
 
@@ -120,6 +127,7 @@ const SearchResultsPage = () => {
                 onCategoryChange={handleCategoryChange}
                 priceRange={priceRange}
                 onPriceRangeChange={setPriceRange}
+                maxPrice={maxPrice}
                 minRating={minRating}
                 onMinRatingChange={setMinRating}
                 onClear={handleClearFilters}
@@ -147,6 +155,7 @@ const SearchResultsPage = () => {
               onCategoryChange={handleCategoryChange}
               priceRange={priceRange}
               onPriceRangeChange={setPriceRange}
+              maxPrice={maxPrice}
               minRating={minRating}
               onMinRatingChange={setMinRating}
               onClear={handleClearFilters}

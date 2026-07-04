@@ -155,7 +155,7 @@ const ProductsPage = () => {
                   <TableCell>
                     <Box 
                       component="img"
-                      src={p.imageUrls?.[0] || 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=100&auto=format&fit=crop'}
+                      src={p.imageUrl || p.imageUrls?.[0] || 'https://placehold.co/100x100?text=No+Image'}
                       alt={p.name}
                       sx={{ width: 44, height: 44, borderRadius: 1.5, objectFit: 'cover', border: '1px solid #E5E7EB' }}
                     />
@@ -166,7 +166,7 @@ const ProductsPage = () => {
                       {p.description}
                     </Typography>
                   </TableCell>
-                  <TableCell>{categories[p.categoryId] || 'Handcrafted'}</TableCell>
+                  <TableCell>{p.category || 'Uncategorized'}</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>${p.price}</TableCell>
                   <TableCell>{p.stock}</TableCell>
                   <TableCell>

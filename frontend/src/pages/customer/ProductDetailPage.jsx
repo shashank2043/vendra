@@ -33,6 +33,12 @@ const ProductDetailPage = () => {
   const [userComment, setUserComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
 
+  // Overall rating is the average of this product's reviews (the product record
+  // itself does not store an aggregate rating).
+  const averageRating = reviews.length
+    ? reviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / reviews.length
+    : 0;
+
   useEffect(() => {
     dispatch(fetchProductById(id));
     dispatch(fetchReviewsByProduct(id));
@@ -45,7 +51,7 @@ const ProductDetailPage = () => {
   // Sync active image when product loads
   useEffect(() => {
     if (product) {
-      setActiveImage(product.imageUrls?.[0] || '');
+      setActiveImage(product.imageUrl || product.imageUrls?.[0] || 'https://placehold.co/600x600?text=No+Image');
       
       // Fetch vendor details
       if (product.vendorId) {
@@ -201,9 +207,9 @@ const ProductDetailPage = () => {
 
             {/* Rating summary */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
-              <Rating value={product.rating} readOnly precision={0.1} sx={{ color: '#C2A26F' }} />
+              <Rating value={averageRating} readOnly precision={0.1} sx={{ color: '#C2A26F' }} />
               <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                {product.rating} ({reviews.length} customer reviews)
+                {averageRating.toFixed(1)} ({reviews.length} customer reviews)
               </Typography>
             </Box>
 

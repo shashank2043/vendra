@@ -89,7 +89,7 @@ const ProductCard = ({ product }) => {
       <Box sx={{ position: 'relative', pt: '100%', overflow: 'hidden' }}>
         <CardMedia
           component="img"
-          image={product.imageUrls?.[0] || 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=500&auto=format&fit=crop'}
+          image={product.imageUrl || product.imageUrls?.[0] || 'https://placehold.co/600x600?text=No+Image'}
           alt={product.name}
           sx={{
             position: 'absolute',

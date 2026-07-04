@@ -67,7 +67,7 @@ const ProductModerationPage = () => {
     let list = queue.filter(p => p.moderationStatus === 'PENDING');
 
     if (catFilter !== 'ALL') {
-      list = list.filter(p => p.categoryId === catFilter);
+      list = list.filter(p => p.category === catFilter);
     }
     if (vendorFilter !== 'ALL') {
       list = list.filter(p => p.vendorId === vendorFilter);
@@ -121,7 +121,7 @@ const ProductModerationPage = () => {
             >
               <MenuItem value="ALL">All Categories</MenuItem>
               {categories.map(c => (
-                <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                <MenuItem key={c.id} value={c.name}>{c.name}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -170,7 +170,7 @@ const ProductModerationPage = () => {
                   <TableCell>
                     <Box 
                       component="img"
-                      src={p.imageUrls?.[0] || 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=100&auto=format&fit=crop'}
+                      src={p.imageUrl || p.imageUrls?.[0] || 'https://placehold.co/100x100?text=No+Image'}
                       alt={p.name}
                       sx={{ width: 44, height: 44, borderRadius: 1.5, objectFit: 'cover', border: '1px solid #E5E7EB' }}
                     />
@@ -181,7 +181,7 @@ const ProductModerationPage = () => {
                       {p.description}
                     </Typography>
                   </TableCell>
-                  <TableCell>{getCategoryName(p.categoryId)}</TableCell>
+                  <TableCell>{p.category || 'Uncategorized'}</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>{getVendorName(p.vendorId)}</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>${p.price}</TableCell>
                   <TableCell align="right">
