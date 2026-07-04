@@ -22,8 +22,8 @@ const DashboardPage = () => {
   useEffect(() => {
     if (!user) return;
 
-    // Resolve vendor profile (user.id is the vendorId)
-    const vendorId = user.id;
+    // Resolve vendor profile (the username is the cross-service vendorId)
+    const vendorId = user.username;
     axiosInstance.get(`/api/v1/vendors/${vendorId}`)
       .then((vendorRes) => {
         setVendor(vendorRes.data);
@@ -213,7 +213,7 @@ const DashboardPage = () => {
                 ) : (
                   recentOrders.map((order) => (
                     <TableRow key={order.id} hover>
-                      <TableCell sx={{ fontFamily: 'monospace' }}>#{order.id.slice(0, 14)}...</TableCell>
+                      <TableCell sx={{ fontFamily: 'monospace' }}>#{String(order.id).slice(0, 14)}</TableCell>
                       <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>{order.userName}</TableCell>
                       <TableCell><Badge variant={order.status}>{order.status}</Badge></TableCell>

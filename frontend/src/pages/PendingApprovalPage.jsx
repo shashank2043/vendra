@@ -22,7 +22,7 @@ const PendingApprovalPage = () => {
     if (!user) return;
     setChecking(true);
     try {
-      const response = await axiosInstance.get(`/api/v1/vendors/${user.id}`);
+      const response = await axiosInstance.get(`/api/v1/vendors/${user.username}`);
       const profile = response.data;
       if (profile && profile.approvalStatus) {
         if (profile.approvalStatus === 'APPROVED') {

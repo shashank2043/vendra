@@ -20,7 +20,7 @@ const VendorProfilePage = () => {
 
   useEffect(() => {
     if (!user) return;
-    axiosInstance.get(`/api/v1/vendors/${user.id}`)
+    axiosInstance.get(`/api/v1/vendors/${user.username}`)
       .then(res => {
         const v = res.data;
         if (v) {

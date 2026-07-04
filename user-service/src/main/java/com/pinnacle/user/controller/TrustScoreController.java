@@ -23,8 +23,8 @@ public class TrustScoreController {
     @GetMapping
     @Operation(summary = "Get trust score for one vendor (vendorId) or all vendors ranked")
     public ResponseEntity<ApiResponse<?>> getTrustScores(
-            @RequestParam(value = "vendorId", required = false) Long vendorId) {
-        if (vendorId != null) {
+            @RequestParam(value = "vendorId", required = false) String vendorId) {
+        if (vendorId != null && !vendorId.isBlank()) {
             TrustScoreResponse response = trustScoreService.getForVendor(vendorId);
             return ResponseEntity.ok(ApiResponse.success(response, "Trust score retrieved"));
         }

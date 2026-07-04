@@ -90,12 +90,22 @@ public class TrustScoreServiceImpl implements TrustScoreService {
 
     @Override
     @Transactional(readOnly = true)
-    public TrustScoreResponse getForVendor(Long vendorId) {
-        List<TrustScoreResponse> ranked = getAllRanked();
-        return ranked.stream()
-                .filter(t -> t.getVendorId().equals(vendorId))
+    public TrustScoreResponse getForVendor(String vendorId) {
+        // Resolve to the canonical username (accept a numeric profile id too).
+        String username = userProfileRepository.findByUsername(vendorId)
+                .map(UserProfile::getUsername)
+                .orElseGet(() -> {
+                    try {
+                        return userProfileRepository.findById(Long.valueOf(vendorId))
+                                .map(UserProfile::getUsername).orElse(vendorId);
+                    } catch (NumberFormatException e) {
+                        return vendorId;
+                    }
+                });
+        return getAllRanked().stream()
+                .filter(t -> username.equals(t.getVendorId()))
                 .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found for id: " + vendorId));
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found: " + vendorId));
     }
 
     @Override
@@ -129,7 +139,7 @@ public class TrustScoreServiceImpl implements TrustScoreService {
     }
 
     private void pullOrderStats(UserProfile v) {
-        ApiResponse<Map<String, Object>> resp = orderAnalyticsClient.getAnalytics(v.getId(), TRUSTED_ROLE);
+        ApiResponse<Map<String, Object>> resp = orderAnalyticsClient.getAnalytics(v.getUsername(), TRUSTED_ROLE);
         if (resp == null || resp.getData() == null) return;
         Map<String, Object> data = resp.getData();
         Integer totalOrders = toInt(data.get("totalOrders"));
@@ -143,7 +153,7 @@ public class TrustScoreServiceImpl implements TrustScoreService {
     }
 
     private void pullReviewStats(UserProfile v) {
-        ApiResponse<List<Map<String, Object>>> resp = reviewClient.getReviews(v.getId(), TRUSTED_ROLE);
+        ApiResponse<List<Map<String, Object>>> resp = reviewClient.getReviews(v.getUsername(), TRUSTED_ROLE);
         if (resp == null || resp.getData() == null || resp.getData().isEmpty()) return;
         List<Map<String, Object>> reviews = resp.getData();
         double sum = 0;
@@ -162,7 +172,7 @@ public class TrustScoreServiceImpl implements TrustScoreService {
 
     private TrustScoreResponse toResponse(UserProfile v, int rank) {
         return TrustScoreResponse.builder()
-                .vendorId(v.getId())
+                .vendorId(v.getUsername())
                 .trustScore(v.getTrustScore())
                 .avgRating(v.getAvgRating())
                 .totalOrders(v.getTotalOrders())

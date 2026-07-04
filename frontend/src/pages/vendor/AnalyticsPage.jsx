@@ -19,7 +19,7 @@ const AnalyticsPage = () => {
   useEffect(() => {
     if (!user) return;
 
-    const vendorId = user.id;
+    const vendorId = user.username;
     axiosInstance.get(`/api/v1/vendors/${vendorId}`)
       .then((vendorRes) => {
         setVendor(vendorRes.data);

@@ -22,7 +22,7 @@ public interface TrustScoreService {
     /** Recomputes (in place, without persisting) trustScore, badges and isNew on the entity. */
     void applyTrustFields(UserProfile vendor);
 
-    TrustScoreResponse getForVendor(Long vendorId);
+    TrustScoreResponse getForVendor(String vendorId);
 
     List<TrustScoreResponse> getAllRanked();
 

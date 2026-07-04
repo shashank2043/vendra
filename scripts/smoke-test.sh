@@ -9,7 +9,7 @@
 #
 set -uo pipefail
 
-GATEWAY="${GATEWAY:-http://localhost:8080}"
+GATEWAY="${GATEWAY:-http://localhost:8090}"
 PASS=0
 FAIL=0
 

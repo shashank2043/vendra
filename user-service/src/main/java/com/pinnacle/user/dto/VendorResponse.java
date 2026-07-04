@@ -13,8 +13,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VendorResponse {
-    private Long id;      // = userId
-    private Long userId;
+    private String id;      // = username (the cross-service vendor identity)
+    private String userId;  // = username
     private String businessName;
     private String approvalStatus;
     private String rejectionReason;

@@ -14,7 +14,7 @@ const EarningsPage = () => {
 
   useEffect(() => {
     if (!user) return;
-    const vendorId = user.id;
+    const vendorId = user.username;
     axiosInstance.get(`/api/v1/vendors/${vendorId}`)
       .then(res => setVendor(res.data))
       .catch(() => {});
@@ -123,7 +123,7 @@ const EarningsPage = () => {
             <TableBody>
               {ledger.map((item) => (
                 <TableRow key={item.id} hover>
-                  <TableCell sx={{ fontFamily: 'monospace' }}>#{item.orderId.slice(0, 14)}...</TableCell>
+                  <TableCell sx={{ fontFamily: 'monospace' }}>#{String(item.orderId).slice(0, 14)}</TableCell>
                   <TableCell>{new Date(item.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>${item.grossSales.toFixed(2)}</TableCell>
                   <TableCell>{(item.commissionRate * 100).toFixed(0)}%</TableCell>

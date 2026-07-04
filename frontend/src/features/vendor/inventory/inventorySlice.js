@@ -16,7 +16,8 @@ export const fetchInventory = createAsyncThunk(
       const stockList = stockRes.data || [];
       const stockByProduct = {};
       stockList.forEach((s) => {
-        stockByProduct[s.productId] = s.quantity;
+        // Show sellable (available) stock so reservations from sales are reflected.
+        stockByProduct[s.productId] = s.availableQuantity !== undefined ? s.availableQuantity : s.quantity;
       });
       return products.map((p) => ({
         ...p,

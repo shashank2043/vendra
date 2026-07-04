@@ -17,7 +17,7 @@ public interface ReviewClient {
 
     @GetMapping("/api/v1/reviews")
     ApiResponse<List<Map<String, Object>>> getReviews(
-            @RequestParam("vendorId") Long vendorId,
+            @RequestParam("vendorId") String vendorId,
             @RequestHeader("X-User-Roles") String roles
     );
 }

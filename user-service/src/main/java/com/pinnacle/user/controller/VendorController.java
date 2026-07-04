@@ -44,14 +44,14 @@ public class VendorController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get a single vendor")
-    public ResponseEntity<ApiResponse<VendorResponse>> getVendor(@PathVariable("id") Long id) {
+    public ResponseEntity<ApiResponse<VendorResponse>> getVendor(@PathVariable("id") String id) {
         return ResponseEntity.ok(ApiResponse.success(vendorService.getVendor(id), "Vendor retrieved"));
     }
 
     @PutMapping("/{id}/approve")
     @Operation(summary = "Approve a vendor (Admin only)")
     public ResponseEntity<ApiResponse<VendorResponse>> approve(
-            @PathVariable("id") Long id,
+            @PathVariable("id") String id,
             @RequestHeader("X-User-Roles") String roles) {
         requireAdmin(roles);
         return ResponseEntity.ok(ApiResponse.success(vendorService.approveVendor(id), "Vendor approved"));
@@ -60,7 +60,7 @@ public class VendorController {
     @PutMapping("/{id}/reject")
     @Operation(summary = "Reject a vendor with a reason (Admin only)")
     public ResponseEntity<ApiResponse<VendorResponse>> reject(
-            @PathVariable("id") Long id,
+            @PathVariable("id") String id,
             @RequestBody VendorRejectRequest request,
             @RequestHeader("X-User-Roles") String roles) {
         requireAdmin(roles);
@@ -71,7 +71,7 @@ public class VendorController {
     @PutMapping("/{id}")
     @Operation(summary = "Update vendor details")
     public ResponseEntity<ApiResponse<VendorResponse>> update(
-            @PathVariable("id") Long id,
+            @PathVariable("id") String id,
             @RequestBody VendorUpdateRequest request) {
         return ResponseEntity.ok(ApiResponse.success(vendorService.updateVendor(id, request), "Vendor updated"));
     }

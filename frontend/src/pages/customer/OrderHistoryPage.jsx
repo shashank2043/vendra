@@ -18,7 +18,7 @@ const OrderHistoryPage = () => {
 
   useEffect(() => {
     if (user) {
-      dispatch(fetchOrders(user.id));
+      dispatch(fetchOrders(user.username));
       axiosInstance.get('/api/v1/vendors')
         .then(res => {
           const map = {};
@@ -107,7 +107,7 @@ const OrderHistoryPage = () => {
                       Order Ref
                     </Typography>
                     <Typography variant="caption" fontWeight={700} sx={{ fontFamily: 'monospace' }}>
-                      #{order.id.slice(0, 14)}...
+                      #{String(order.id).slice(0, 14)}
                     </Typography>
                   </Box>
                 </Box>

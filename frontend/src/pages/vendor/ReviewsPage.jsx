@@ -115,7 +115,7 @@ const ReviewsPage = () => {
 
   useEffect(() => {
     if (!user) return;
-    const vendorId = user.id;
+    const vendorId = user.username;
     axiosInstance.get(`/api/v1/vendors/${vendorId}`)
       .then(res => setVendor(res.data))
       .catch(() => {});

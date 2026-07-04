@@ -65,65 +65,87 @@ const CheckoutPage = () => {
     dispatch(nextStep());
   };
 
-  // Simulated Razorpay checkout flow
-  const handleRazorpayPayment = () => {
+  const loadRazorpayScript = () =>
+    new Promise((resolve) => {
+      if (window.Razorpay) return resolve(true);
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+
+  // Opens the real Razorpay checkout using the publishable key sourced from
+  // payment-service/.env (exposed to the client by vite.config.js as VITE_RAZORPAY_KEY_ID).
+  // Falls back to a sandbox simulation when no key is configured.
+  const handleRazorpayPayment = async () => {
     setPaymentProcessing(true);
-    
-    // Dynamically load Razorpay script
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    script.onload = () => {
-      const options = {
-        key: 'rzp_test_placeholder_key_vendra', // test key
-        amount: cartTotal * 100, // paise
-        currency: 'USD',
-        name: 'Vendra Artisanal',
+    const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+
+    if (!razorpayKey || !razorpayKey.startsWith('rzp_')) {
+      setTimeout(() => {
+        toast.success('Payment authorized (Razorpay sandbox).');
+        setPaymentProcessing(false);
+        dispatch(nextStep());
+      }, 1000);
+      return;
+    }
+
+    try {
+      // The backend creates the Razorpay order using the secret key (server-side only).
+      const checkoutRef = `checkout-${Date.now()}`;
+      const createRes = await axiosInstance.post('/api/v1/payments/create-order', {
+        orderId: checkoutRef,
+        amount: cartTotal,
+      });
+      const { razorpayOrderId, amount, currency } = createRes.data || {};
+
+      const scriptOk = await loadRazorpayScript();
+      if (!scriptOk) throw new Error('Razorpay SDK failed to load');
+
+      const rzp = new window.Razorpay({
+        key: razorpayKey,
+        order_id: razorpayOrderId,
+        amount: amount ?? Math.round(cartTotal * 100),
+        currency: currency || 'INR',
+        name: 'Vendra',
         description: 'Multi-Vendor Checkout',
-        image: 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=100&auto=format&fit=crop',
-        handler: function (response) {
-          toast.success('Payment authorized via Razorpay!');
-          setPaymentProcessing(false);
-          dispatch(nextStep());
-        },
         prefill: {
           name: address.fullName || user?.name || '',
           email: user?.email || '',
         },
-        theme: {
-          color: '#111827' // Obsidian Charcoal
+        theme: { color: '#111827' },
+        handler: async (response) => {
+          try {
+            await axiosInstance.post('/api/v1/payments/verify', {
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+          } catch (e) {
+            console.warn('Payment verification call failed:', e);
+          }
+          toast.success('Payment successful!');
+          setPaymentProcessing(false);
+          dispatch(nextStep());
         },
         modal: {
-          ondismiss: function () {
+          ondismiss: () => {
             setPaymentProcessing(false);
-            toast.warning('Payment window closed. Please try again.');
-          }
-        }
-      };
-
-      try {
-        const rzp = new window.Razorpay(options);
-        rzp.open();
-      } catch (err) {
-        console.warn('Could not launch real Razorpay window. Simulating gateway...');
-        simulateRazorpayFallback();
-      }
-    };
-
-    script.onerror = () => {
-      console.warn('Failed to load Razorpay SDK. Simulating gateway...');
-      simulateRazorpayFallback();
-    };
-
-    document.body.appendChild(script);
-  };
-
-  const simulateRazorpayFallback = () => {
-    setTimeout(() => {
-      toast.success('Payment authorized via Razorpay Gateway (Sandbox)!');
+            toast.warning('Payment cancelled.');
+          },
+        },
+      });
+      rzp.on('payment.failed', () => {
+        setPaymentProcessing(false);
+        toast.error('Payment failed. Please try again.');
+      });
+      rzp.open();
+    } catch (err) {
+      console.error('Razorpay checkout error:', err);
       setPaymentProcessing(false);
-      dispatch(nextStep());
-    }, 1500);
+      toast.error('Could not start payment. Please try again.');
+    }
   };
 
   // Group items by vendorId
@@ -136,34 +158,6 @@ const CheckoutPage = () => {
     return groups;
   }, {});
 
-  // Best-effort payment: mark each created order as paid. Backend supports
-  // a placeholder/mock mode, so failures here must not block order completion.
-  const settlePayments = async (createdOrders) => {
-    try {
-      for (const ord of createdOrders) {
-        if (!ord?.id) continue;
-        let razorpayOrderId;
-        try {
-          const payRes = await axiosInstance.post('/api/v1/payments/create-order', {
-            orderId: ord.id,
-            amount: ord.total,
-          });
-          razorpayOrderId = payRes.data?.razorpayOrderId;
-        } catch (e) {
-          console.warn('create-order failed (continuing):', e);
-        }
-        await axiosInstance.post('/api/v1/payments/verify', {
-          orderId: ord.id,
-          razorpayOrderId,
-          paymentId: `mock_${Date.now()}`,
-          signature: 'mock_signature',
-        });
-      }
-    } catch (e) {
-      console.warn('Payment settlement skipped:', e);
-    }
-  };
-
   const handlePlaceOrder = async () => {
     setSubmittingOrder(true);
 
@@ -173,12 +167,20 @@ const CheckoutPage = () => {
         const items = groupedItems[vendorId];
         const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
 
+        // Backend expects shippingAddress as a single string.
+        const shippingAddress = [
+          address.fullName,
+          address.addressLine1,
+          `${address.city || ''} ${address.postalCode || ''}`.trim(),
+          address.country,
+        ].filter(Boolean).join(', ');
+
         const vendorOrder = {
-          userId: user.id,
+          userId: user.username,
           vendorId,
           items,
           total: subtotal,
-          shippingAddress: address,
+          shippingAddress,
           paymentMethod: paymentMethod || 'Razorpay',
           priority: 'STANDARD',
         };
@@ -186,16 +188,18 @@ const CheckoutPage = () => {
         return dispatch(placeOrder(vendorOrder)).unwrap();
       });
 
-      const createdOrders = await Promise.all(orderPromises);
-      await settlePayments(createdOrders);
+      await Promise.all(orderPromises);
       toast.success('Your order has been placed successfully!');
 
       // Seed a platform notification for this purchase
       try {
+        const orderMessage = 'Your order has been placed successfully! Tracking available in your orders.';
         await axiosInstance.post('/notifications', {
           role: 'CUSTOMER',
-          userId: user.id,
-          message: 'Your order has been placed successfully! Tracking available in your orders.',
+          userId: user.username,
+          message: orderMessage,
+          subject: 'Order Placed',
+          body: orderMessage,
         });
       } catch (e) {
         console.warn('Notification seed skipped:', e);

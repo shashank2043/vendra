@@ -13,13 +13,30 @@ export const fetchVendorProducts = createAsyncThunk(
   }
 );
 
+// Inventory lives in a separate service; without an inventory record the order saga
+// can't reserve stock and orders end up FAILED. Seed/update it alongside the product.
+const syncInventory = async (productId, stock) => {
+  try {
+    if (productId != null && stock != null && Number(stock) >= 0) {
+      await axiosInstance.post('/api/v1/inventory', {
+        productId,
+        quantity: Number(stock),
+      });
+    }
+  } catch (e) {
+    console.warn('Inventory sync failed:', e);
+  }
+};
+
 export const createProduct = createAsyncThunk(
   'vendorProducts/createProduct',
   async (productData, { rejectWithValue }) => {
     try {
       // Backend assigns id and default moderation status.
       const response = await axiosInstance.post('/api/v1/products', productData);
-      return response.data;
+      const created = response.data;
+      await syncInventory(created?.id, productData.stock);
+      return created;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to create product');
     }
@@ -31,6 +48,7 @@ export const updateProduct = createAsyncThunk(
   async ({ id, data }, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.put(`/api/v1/products/${id}`, data);
+      await syncInventory(id, data.stock);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to update product');

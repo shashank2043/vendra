@@ -143,7 +143,7 @@ const OrdersPage = () => {
                   onClick={() => handleRowClick(order)}
                   sx={{ cursor: 'pointer' }}
                 >
-                  <TableCell sx={{ fontFamily: 'monospace' }}>#{order.id.slice(0, 14)}...</TableCell>
+                  <TableCell sx={{ fontFamily: 'monospace' }}>#{String(order.id).slice(0, 14)}</TableCell>
                   <TableCell fontWeight={600}>{order.userName}</TableCell>
                   <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>

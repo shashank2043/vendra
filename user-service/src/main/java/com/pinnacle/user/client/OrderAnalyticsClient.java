@@ -18,13 +18,13 @@ public interface OrderAnalyticsClient {
 
     @GetMapping("/api/v1/analytics")
     ApiResponse<Map<String, Object>> getAnalytics(
-            @RequestParam("vendorId") Long vendorId,
+            @RequestParam("vendorId") String vendorId,
             @RequestHeader("X-User-Roles") String roles
     );
 
     @GetMapping("/api/v1/orders")
     ApiResponse<List<Map<String, Object>>> getOrders(
-            @RequestParam("vendorId") Long vendorId,
+            @RequestParam("vendorId") String vendorId,
             @RequestHeader("X-User-Roles") String roles
     );
 }

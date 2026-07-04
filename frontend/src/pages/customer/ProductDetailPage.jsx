@@ -59,7 +59,7 @@ const ProductDetailPage = () => {
   // Check eligibility to review
   useEffect(() => {
     if (isAuthenticated && user && product) {
-      axiosInstance.get(`/api/v1/orders?userId=${user.id}&status=DELIVERED`)
+      axiosInstance.get(`/api/v1/orders?userId=${user.username}&status=DELIVERED`)
         .then((res) => {
           const hasPurchased = (res.data || []).some(order =>
             (order.items || []).some(item => item.productId === product.id)

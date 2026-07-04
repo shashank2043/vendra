@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Tabs, Tab, Collapse, Button, Grid, Stack, Skeleton } from '@mui/material';
+import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Tabs, Tab, Collapse, Button, Grid, Stack, Skeleton, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { ChevronDown, ChevronUp, CheckCircle, Truck, ShoppingBag } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { fetchVendorOrders, updateOrderStatus } from '../../features/vendor/orders/orderSlice';
@@ -34,7 +34,7 @@ const OrderRow = ({ order, onStatusUpdate }) => {
             {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </IconButton>
         </TableCell>
-        <TableCell sx={{ fontFamily: 'monospace' }}>#{order.id.slice(0, 14)}...</TableCell>
+        <TableCell sx={{ fontFamily: 'monospace' }}>#{String(order.id).slice(0, 14)}</TableCell>
         <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
         <TableCell>{order.userName}</TableCell>
         <TableCell>
@@ -54,10 +54,11 @@ const OrderRow = ({ order, onStatusUpdate }) => {
                   <Typography variant="subtitle2" fontWeight={750} color="secondary.dark" sx={{ mb: 1.5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Shipping Address
                   </Typography>
-                  <Typography variant="body2" fontWeight={700}>{order.shippingAddress?.fullName}</Typography>
-                  <Typography variant="body2" color="text.secondary">{order.shippingAddress?.addressLine1}</Typography>
-                  <Typography variant="body2" color="text.secondary">{order.shippingAddress?.city}, {order.shippingAddress?.postalCode}</Typography>
-                  <Typography variant="body2" color="text.secondary">{order.shippingAddress?.country}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {typeof order.shippingAddress === 'string'
+                      ? order.shippingAddress
+                      : [order.shippingAddress?.fullName, order.shippingAddress?.addressLine1, order.shippingAddress?.city, order.shippingAddress?.postalCode, order.shippingAddress?.country].filter(Boolean).join(', ')}
+                  </Typography>
                 </Grid>
 
                 {/* Line Items */}
@@ -79,7 +80,7 @@ const OrderRow = ({ order, onStatusUpdate }) => {
                 </Grid>
 
                 {/* Operations Actions */}
-                <Grid item xs={12} sm={3} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: { xs: 'flex-start', sm: 'flex-end' } }}>
+                <Grid item xs={12} sm={3} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 1.5, alignItems: { xs: 'flex-start', sm: 'flex-end' } }}>
                   {action && (
                     <Button
                       variant="contained"
@@ -91,6 +92,19 @@ const OrderRow = ({ order, onStatusUpdate }) => {
                       {action.label}
                     </Button>
                   )}
+                  <FormControl size="small" sx={{ minWidth: 170 }}>
+                    <InputLabel id={`status-${order.id}`}>Set status</InputLabel>
+                    <Select
+                      labelId={`status-${order.id}`}
+                      label="Set status"
+                      value={order.status}
+                      onChange={(e) => onStatusUpdate(order.id, e.target.value)}
+                    >
+                      {['PLACED', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((s) => (
+                        <MenuItem key={s} value={s}>{s}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
                 </Grid>
               </Grid>
             </Box>
@@ -111,7 +125,7 @@ const OrdersPage = () => {
 
   useEffect(() => {
     if (!user) return;
-    const vendorId = user.id;
+    const vendorId = user.username;
     axiosInstance.get(`/api/v1/vendors/${vendorId}`)
       .then(res => setVendor(res.data))
       .catch(() => {});

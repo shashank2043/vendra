@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TrustScoreResponse {
-    private Long vendorId;
+    private String vendorId; // = username
     private Double trustScore;
     private Double avgRating;
     private Integer totalOrders;

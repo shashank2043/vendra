@@ -39,13 +39,13 @@ public class VendorServiceImpl implements VendorService {
 
     @Override
     @Transactional(readOnly = true)
-    public VendorResponse getVendor(Long id) {
-        return toResponse(findVendor(id));
+    public VendorResponse getVendor(String idOrUsername) {
+        return toResponse(findVendor(idOrUsername));
     }
 
     @Override
-    public VendorResponse approveVendor(Long id) {
-        UserProfile v = findVendor(id);
+    public VendorResponse approveVendor(String idOrUsername) {
+        UserProfile v = findVendor(idOrUsername);
         v.setApprovalStatus("APPROVED");
         v.setApproved(true);
         v.setRejectionReason(null);
@@ -53,14 +53,14 @@ public class VendorServiceImpl implements VendorService {
         try {
             authServiceClient.updateActivation(v.getId(), true);
         } catch (Exception e) {
-            log.error("Failed to re-activate vendor {} in auth-service: {}", id, e.getMessage());
+            log.error("Failed to re-activate vendor {} in auth-service: {}", idOrUsername, e.getMessage());
         }
         return toResponse(v);
     }
 
     @Override
-    public VendorResponse rejectVendor(Long id, String reason) {
-        UserProfile v = findVendor(id);
+    public VendorResponse rejectVendor(String idOrUsername, String reason) {
+        UserProfile v = findVendor(idOrUsername);
         v.setApprovalStatus("REJECTED");
         v.setApproved(false);
         v.setRejectionReason(reason);
@@ -69,8 +69,8 @@ public class VendorServiceImpl implements VendorService {
     }
 
     @Override
-    public VendorResponse updateVendor(Long id, VendorUpdateRequest request) {
-        UserProfile v = findVendor(id);
+    public VendorResponse updateVendor(String idOrUsername, VendorUpdateRequest request) {
+        UserProfile v = findVendor(idOrUsername);
         if (request.getBusinessName() != null) v.setBusinessName(request.getBusinessName());
         if (request.getBusinessAddress() != null) v.setBusinessAddress(request.getBusinessAddress());
         if (request.getTaxId() != null) v.setTaxId(request.getTaxId());
@@ -99,16 +99,26 @@ public class VendorServiceImpl implements VendorService {
                 .collect(Collectors.toList());
     }
 
-    private UserProfile findVendor(Long id) {
-        UserProfile v = userProfileRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found for id: " + id));
-        return v;
+    /**
+     * Resolves a vendor by its cross-service identity (the username) first, falling back to the
+     * numeric profile id for backward compatibility.
+     */
+    private UserProfile findVendor(String idOrUsername) {
+        return userProfileRepository.findByUsername(idOrUsername)
+                .or(() -> {
+                    try {
+                        return userProfileRepository.findById(Long.valueOf(idOrUsername));
+                    } catch (NumberFormatException e) {
+                        return java.util.Optional.empty();
+                    }
+                })
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found: " + idOrUsername));
     }
 
     private VendorResponse toResponse(UserProfile v) {
         return VendorResponse.builder()
-                .id(v.getId())
-                .userId(v.getId())
+                .id(v.getUsername())
+                .userId(v.getUsername())
                 .businessName(v.getBusinessName())
                 .approvalStatus(v.getApprovalStatus())
                 .rejectionReason(v.getRejectionReason())

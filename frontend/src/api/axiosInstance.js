@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Talks to the real Spring Cloud Gateway (see .env.*).
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8090';
 
 const axiosInstance = axios.create({
   baseURL,

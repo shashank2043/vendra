@@ -1,217 +1,188 @@
-# Production-Quality Full-Stack Microservices Starter Template
+# Vendra: Multi-Vendor E-Commerce Order Management Platform
 
-An enterprise-grade, highly-configurable full-stack starter kit designed for Vendras. It contains a complete service mesh infrastructure on the backend and a modern UI on the frontend, with business logic completely decoupled to enable fast pivoting.
+Vendra is an enterprise-grade, highly-configurable, full-stack multi-vendor marketplace and order management ecosystem. It features a complete service mesh infrastructure powered by Spring Boot microservices on the backend, integrated with Keycloak OAuth2 security and Apache Kafka event-driven pipelines, alongside a modern role-based React dashboard on the frontend.
 
 ---
 
 ## Architecture Overview
 
+Vendra is designed with a decentralized, container-ready microservices architecture. Here is the overall service interaction and routing diagram:
+
 ```mermaid
 graph TD
-    Client[React 19 Frontend] -->|HTTP/REST /auth, /notifications| Gateway[API Gateway - Port 8080]
-    Gateway -->|JWT Validate & Route| Registry[Eureka Service Discovery - Port 8761]
-    Gateway -->|Proxy Service LB| AuthService[Auth Service - Port 8081]
-    Gateway -->|Proxy Service LB| NotificationService[Notification Service - Port 8082]
+    Client[React 19 Frontend - Port 3000] -->|HTTP / REST| Gateway[API Gateway - Port 8090]
     
-    AuthService -->|Read Schema / State| DB[(MySQL Database)]
-    NotificationService -->|Read Schema / Logs| DB
+    Gateway -->|Service Routing| Eureka[Eureka Discovery Server - Port 8761]
+    Gateway -->|Token Validation & SSO| Keycloak[Keycloak Identity - Port 8083]
     
-    AllServices[...] -->|Fetch configuration| ConfigServer[Config Server - Port 8888]
+    subgraph Infrastructure Services
+        ConfigServer[Config Server - Port 8888]
+        Eureka
+        Keycloak
+    end
+    
+    subgraph Microservices Mesh
+        AuthService[Auth Service - Port 8081]
+        UserService[User Service - Port 8087]
+        ProductService[Product Service - Port 8084]
+        InventoryService[Inventory Service - Port 8086]
+        OrderService[Order Service - Port 8085]
+        ReviewService[Review Service - Port 8088]
+        PaymentService[Payment Service - Port 8089]
+        NotificationService[Notification Service - Port 8082]
+        ReportService[Report Service - Port 8092]
+    end
+    
+    subgraph Storage & Middleware
+        MySQL[(MySQL DB)]
+        MongoDB[(MongoDB)]
+        Kafka[[Apache Kafka]]
+    end
+
+    %% Configuration loading
+    Microservices Mesh -.->|Fetch Configuration| ConfigServer
+    
+    %% Databases connections
+    AuthService & UserService & InventoryService & OrderService & PaymentService & NotificationService -->|Read/Write| MySQL
+    ProductService & ReviewService -->|Read/Write| MongoDB
+    
+    %% Kafka messaging
+    OrderService & InventoryService & NotificationService -.->|Produce/Consume Events| Kafka
 ```
 
-### Backend Components
-1. **Config Server (Port 8888)**: Centralized Spring Cloud Config server reading configuration profiles from classpath folders (extensible to Git).
-2. **Eureka Discovery Server (Port 8761)**: Dynamic service registry for service instances.
-3. **API Gateway (Port 8080)**: Intercepts all client requests, validates JWT access token claims reactively, injects user identities, and routes traffic downstream.
-4. **Auth Service (Port 8081)**: Manages sign-up, sign-in, profile queries, and invalidations. Persists access tokens in-memory and refresh tokens in HttpOnly cookies.
-5. **Notification Service (Port 8082)**: Reusable notification dispatch hub (EMAIL, SMS, PUSH placeholders) and delivery logs recorder, with Kafka templates ready.
-6. **Common Library**: Shared Maven jar packaging DTO structures, centralized REST advice handlers, custom exceptions, JWT cryptography utility helpers, and structured latency logging filters.
+### Module & Service Directory Mapping
 
-### Frontend Components
-* **React 19 + Vite (Port 3000)**: Clean, high-performance web dashboard built using Material UI v6 styling, Redux Toolkit state, Formik + Yup schema validations, and Framer Motion animations.
-* **Axios API layer**: Built-in request/response interceptors to automatically bind Bearer tokens, capture `401 Unauthorized` responses, and perform token refreshing.
+*   [api-gateway](file:///C:/Users/delegate/Downloads/hackathon-template-main/vendra/api-gateway): Spring Cloud Gateway acting as the single entry point. Performs global CORS configuration, routing, and Swagger API documentation aggregating. Exposes port **8090**.
+*   [auth-service](file:///C:/Users/delegate/Downloads/hackathon-template-main/vendra/auth-service): Integrates with Keycloak to manage SSO, user registration, token exchanges, and role assignments. Exposes port **8081**.
+*   [config-server](file:///C:/Users/delegate/Downloads/hackathon-template-main/vendra/config-server): Centralized configuration hub pulling profiles from the local configuration files repository. Exposes port **8888**.
+*   [config-repo](file:///C:/Users/delegate/Downloads/hackathon-template-main/vendra/config-repo): YAML-based configuration store containing environment settings for each downstream microservice.
+*   [discovery-server](file:///C:/Users/delegate/Downloads/hackathon-template-main/vendra/discovery-server): Eureka Discovery Server to allow dynamic lookups, health-monitoring, and internal routing. Exposes port **8761**.
+*   [user-service](file:///C:/Users/delegate/Downloads/hackathon-template-main/vendra/user-service): Manages user/vendor accounts, metadata, admin operations, and Trust Score calculations. Exposes port **8087**.
+*   [product-service](file:///C:/Users/delegate/Downloads/hackathon-template-main/vendra/product-service): Manages product catalogues, onboarding, categories, and moderation statuses. Backed by MongoDB. Exposes port **8084**.
+*   [inventory-service](file:///C:/Users/delegate/Downloads/hackathon-template-main/vendra/inventory-service): Handles vendor-specific product stock levels, inventory updates, reservation logic, and low-stock Kafka alerting. Exposes port **8086**.
+*   [order-service](file:///C:/Users/delegate/Downloads/hackathon-template-main/vendra/order-service): Core order engine handling order placement, commission calculations, disputes, and delivery statuses. Exposes port **8085**.
+*   [payment-service](file:///C:/Users/delegate/Downloads/hackathon-template-main/vendra/payment-service): Coordinates Razorpay payment processing and stores payment records. Exposes port **8089**.
+*   [review-service](file:///C:/Users/delegate/Downloads/hackathon-template-main/vendra/review-service): Handles customer-submitted product reviews and ratings. Backed by MongoDB. Exposes port **8088**.
+*   [notification-service](file:///C:/Users/delegate/Downloads/hackathon-template-main/vendra/notification-service): Kafka-driven event listener dispatching real-time notifications (Email/SMS simulation). Exposes port **8082**.
+*   [report-service](file:///C:/Users/delegate/Downloads/hackathon-template-main/vendra/report-service): Gathers cross-service analytics for admin and vendor reporting. Exposes port **8092**.
+*   [frontend](file:///C:/Users/delegate/Downloads/hackathon-template-main/vendra/frontend): Vite-powered React 19 single-page app displaying clean, premium dashboards using Material UI (MUI v6) and Redux Toolkit. Exposes port **3000**.
+
+---
+
+## Key Features
+
+### 👤 Customer Portal
+*   **Discovery**: Product catalog browsing, keyword search, category filtering.
+*   **Reviews & Ratings**: Share feedback and check other users' product ratings.
+*   **Cart & Checkout**: Manage local shopping cart, input shipping details, checkout.
+*   **Secure Payment**: Razorpay payment checkout integration.
+*   **Order Tracking**: Real-time order processing and shipment status updates.
+*   **Wishlist**: Save favorite items for later.
+
+### 🏢 Vendor Portal
+*   **Onboarding**: Registration and profile verification system (subject to Admin approval).
+*   **Product Listing**: Upload products, descriptions, pricing, and media assets.
+*   **Inventory Control**: Update stock counts and avoid inventory mismatch penalties.
+*   **Order Fulfillment**: View assigned customer orders, update tracking statuses.
+*   **Sales & Earnings Analytics**: Comprehensive dashboard showing income, order volumes, and performance graphs.
+*   **Vendor Trust Score**: Scoring system evaluating vendor reliability, order completion rate, and shipping speeds.
+
+### 👑 Admin Portal
+*   **Verification Dashboard**: Approve/Reject onboarding vendors.
+*   **Product Moderation**: Moderate new product listings before they go public.
+*   **Commission Manager**: Create and fine-tune platform fee and commission rules.
+*   **Dispute Resolution**: Oversee customer-vendor disputes and issue refunds.
+*   **Analytics Reports**: System-wide performance, active users, total revenue, and commission yields.
+*   **User Management**: Monitor, edit, or suspend customer and vendor accounts.
+
+---
+
+## Technology Stack
+
+*   **Frontend**: React 19, Vite, Material UI (MUI v6), Axios, Formik + Yup, Redux Toolkit.
+*   **Backend Framework**: Spring Boot 3.x, Spring Cloud Gateway, Spring Cloud Config, Spring Cloud Eureka.
+*   **Security & SSO**: Keycloak 24, Spring Security, JWT (JSON Web Tokens).
+*   **Databases**:
+    *   **Relational**: MySQL 8.0 (Schema schemas: `auth_db`, `notification_db`, `order_db`, `inventory_db`, `user_db`, `payment_db`).
+    *   **Document**: MongoDB 6.0 (Collections: products, reviews).
+*   **Message Broker**: Apache Kafka + Zookeeper (handling inventory updates and notifications).
+*   **Build & Containerization**: Maven, Docker, Docker Compose.
 
 ---
 
 ## Quick Start (Run with Docker Compose)
 
-To spin up the entire application stack including the MySQL databases, run:
+To spin up the entire application stack including databases, Keycloak, Kafka, and the microservices:
 
-1. **Compile Backend Services**:
-   ```bash
-   mvn clean package -DskipTests
-   ```
+### 1. Build Backend Microservices
+Compile all Spring Boot projects into JARs:
+```bash
+mvn clean package -DskipTests
+```
 
-2. **Boot up Services via Docker Compose**:
-   ```bash
-   docker-compose up --build
-   ```
+### 2. Launch Stack via Docker Compose
+From the root directory, spin up all services:
+```bash
+docker-compose up --build
+```
+> **Note**: Keycloak imports the preset realm dynamically on startup. It might take up to a minute for all database schema creations and services to stabilize.
 
-3. **Access Services**:
-   * **React Console**: [http://localhost:3000](http://localhost:3000)
-   * **API Gateway Router**: [http://localhost:8080](http://localhost:8080)
-   * **Eureka Registry Console**: [http://localhost:8761](http://localhost:8761)
-   * **Config Server JSON Endpoint**: [http://localhost:8888/auth-service/default](http://localhost:8888/auth-service/default)
-   * **Auth OpenAPI Docs**: [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html)
-   * **Notification OpenAPI Docs**: [http://localhost:8082/swagger-ui.html](http://localhost:8082/swagger-ui.html)
+### 3. Service Access Endpoints
 
-4. **Default Credentials**:
-   * **Standard Account**: `user` / `password123`
-   * **Administrator Account**: `admin` / `password123`
+| Service / App | Host URL | Port |
+| :--- | :--- | :--- |
+| **React Customer/Vendor/Admin UI** | [http://localhost:3000](http://localhost:3000) | `3000` |
+| **API Gateway Router** | [http://localhost:8090](http://localhost:8090) | `8090` |
+| **Eureka Registry Dashboard** | [http://localhost:8761](http://localhost:8761) | `8761` |
+| **Keycloak Admin UI** | [http://localhost:8083](http://localhost:8083) | `8083` |
+| **Config Server JSON Endpoint** | [http://localhost:8888/auth-service/default](http://localhost:8888/auth-service/default) | `8888` |
+| **Swagger OpenAPI Documentation Hub** | [http://localhost:8090/swagger-ui.html](http://localhost:8090/swagger-ui.html) | `8090` |
+
+### 🔑 Default Credentials
+*   **Keycloak Administrator Account**: `admin` / `admin`
+*   **Standard Customer Profile**: `customer` / `password`
+*   **Standard Vendor Profile**: `vendor` / `password`
+*   **Platform Admin Profile**: `admin` / `password`
 
 ---
 
 ## Running Locally (Without Docker)
 
-Each microservice contains a `.env` file with configuration variables mapping to `localhost` services. To run the Spring Boot applications directly on your host machine:
+If you prefer to run services on your host machine without Docker containerization, ensure you have MySQL, MongoDB, and Kafka running locally.
 
-### 1. Set up Databases
-Ensure a local MySQL instance is running on port `3306`. The microservices will automatically create their respective databases (`auth_db` and `notification_db`) on startup using the `createDatabaseIfNotExist=true` parameter in their JDBC connection URLs.
+### 1. Set Up Database Schemas
+Log in to your local MySQL instance and run:
+```sql
+CREATE DATABASE IF NOT EXISTS auth_db;
+CREATE DATABASE IF NOT EXISTS notification_db;
+CREATE DATABASE IF NOT EXISTS order_db;
+CREATE DATABASE IF NOT EXISTS inventory_db;
+CREATE DATABASE IF NOT EXISTS user_db;
+CREATE DATABASE IF NOT EXISTS payment_db;
+```
 
-### 2. Export `.env` Variables
-You must load the `.env` parameters into your shell before starting the applications.
+### 2. Local Environment Variables
+Load the variables defined in the root [.env.example](file:///C:/Users/delegate/Downloads/hackathon-template-main/vendra/.env.example) file into your terminal sessions.
 
-*   **In Git Bash (Windows/Linux/macOS)**:
-    Navigate to the service directory and run:
-    ```bash
-    export $(grep -v '^#' .env | xargs)
-    mvn spring-boot:run
-    ```
-*   **In PowerShell (Windows)**:
-    Navigate to the service directory and run:
+*   **Windows (PowerShell)**:
     ```powershell
-    Get-Content .env | ForEach-Object {
+    Get-Content .env.example | ForEach-Object {
         if ($_ -notmatch '^\s*#' -and $_ -like '*=*') {
             $name, $value = $_ -split '=', 2
             [System.Environment]::SetEnvironmentVariable($name.Trim(), $value.Trim(), [System.EnvironmentVariableTarget]::Process)
         }
     }
-    mvn spring-boot:run
     ```
-*   **In IDEs (IntelliJ IDEA / Eclipse / VS Code)**:
-    Install an environment loader plugin (such as the **EnvFile** plugin for IntelliJ) and configure it to read the local `.env` file in the Run/Debug Configurations panel.
+*   **Linux / macOS / Git Bash**:
+    ```bash
+    export $(grep -v '^#' .env.example | xargs)
+    ```
 
-### 3. Startup Order
-To ensure service dependencies register properly, start the services in this order:
+### 3. Service Startup Order
+Start services in the following order to ensure proper configuration retrieval and discovery registration:
 1. `config-server` (Port 8888)
 2. `discovery-server` (Port 8761)
-3. `auth-service` (Port 8081) & `notification-service` (Port 8082)
-4. `api-gateway` (Port 8080)
-
----
-
-## Step-by-Step: Adding a New Service (e.g., Product Service)
-
-During a Vendra, you can spin up a new service in under 5 minutes:
-
-### 1. Create a New Maven Module
-Create a folder `product-service` and add a `pom.xml`:
-```xml
-<parent>
-    <groupId>com.pinnacle.vendra</groupId>
-    <artifactId>vendra</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-    <relativePath>../pom.xml</relativePath>
-</parent>
-<artifactId>product-service</artifactId>
-<dependencies>
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-data-jpa</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>com.pinnacle.vendra</groupId>
-        <artifactId>common-library</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-config</artifactId>
-    </dependency>
-</dependencies>
-```
-Update `<modules>` in the parent `/pom.xml` to include `<module>product-service</module>`.
-
-### 2. Configure Local Registry Settings
-Create `product-service/src/main/resources/application.yml`:
-```yaml
-spring:
-  application:
-    name: product-service
-  config:
-    import: "optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
-```
-
-### 3. Create Shared Configurations
-Create `config-server/src/main/resources/shared/product-service.yml` to specify port, database schemas, and documentation:
-```yaml
-server:
-  port: 8083
-
-spring:
-  datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/vendra_db
-  jpa:
-    hibernate:
-      ddl-auto: update
-```
-
-### 4. Register Gateway Routing Rules
-Open `config-server/src/main/resources/shared/api-gateway.yml` and add a new route entry:
-```yaml
-      routes:
-        ...
-        - id: product-service
-          uri: lb://product-service
-          predicates:
-            - Path=/products/**
-          filters:
-            - StripPrefix=0
-```
-
-### 5. Add Main Application class
-Create `ProductServiceApplication.java` under package `com.pinnacle.vendra.product`:
-```java
-package com.pinnacle.vendra.product;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-
-@SpringBootApplication(scanBasePackages = {"com.pinnacle.vendra.product", "com.pinnacle.vendra.common"})
-@EnableDiscoveryClient
-public class ProductServiceApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(ProductServiceApplication.class, args);
-    }
-}
-```
-
-### 6. Add REST Endpoints & Read Headers
-Inject user data (username, roles) passed by the API Gateway:
-```java
-@GetMapping("/my-products")
-public ResponseEntity<?> getProducts(@RequestHeader("X-User-Name") String username, 
-                                     @RequestHeader("X-User-Roles") String roles) {
-    // Business Logic
-}
-```
-
-### 7. Consume API on the Frontend
-Create `frontend/src/services/productService.js`:
-```javascript
-import api from './api';
-
-export const getProducts = async () => {
-  const response = await api.get('/products/my-products');
-  return response.data.data;
-};
-```
-Use it inside your React components with React hooks or Redux dispatch thunks!
+3. `auth-service` (Port 8081) & `user-service` (Port 8087)
+4. All other microservices (`product-service`, `inventory-service`, `order-service`, `payment-service`, `review-service`, `notification-service`, `report-service`)
+5. `api-gateway` (Port 8090)
+6. `frontend` (Port 3000) - run `npm install` followed by `npm run dev` in the `/frontend` directory.
