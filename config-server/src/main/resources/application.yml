@@ -10,7 +10,7 @@ spring:
     config:
       server:
         native:
-          search-locations: classpath:/shared
+          search-locations: file:./config-repo
         # Ready for Git configuration migration by uncommenting below:
         # git:
         #   uri: https://github.com/your-org/your-config-repo.git

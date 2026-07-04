@@ -39,7 +39,7 @@ const ProfilePage = () => {
     } catch (e) {
       console.error('Failed to load user profile: ', e);
       // Fallback in case backend is offline
-      setProfileData(user || { username: 'admin', email: 'admin@vendra.com', roles: ['ROLE_ADMIN', 'ROLE_USER'], enabled: true });
+      setProfileData(user || { username: 'admin', email: 'admin@vendra.com', roles: ['ROLE_ADMIN', 'ROLE_CUSTOMER'], enabled: true });
       setEmailInput(user?.email || 'admin@vendra.com');
     } finally {
       setLoading(false);
