@@ -32,9 +32,12 @@
         <module>auth-service</module>
         <module>notification-service</module>
         <module>product-service</module>
+        <module>review-service</module>
         <module>order-service</module>
+        <module>payment-service</module>
         <module>inventory-service</module>
         <module>user-service</module>
+        <module>report-service</module>
     </modules>
 
     <dependencyManagement>

@@ -22,10 +22,10 @@ const DashboardPage = () => {
 
   useEffect(() => {
     Promise.all([
-      axiosInstance.get('/vendorProfiles'),
-      axiosInstance.get('/orders'),
-      axiosInstance.get('/disputes'),
-      axiosInstance.get('/products')
+      axiosInstance.get('/api/v1/vendors'),
+      axiosInstance.get('/api/v1/orders'),
+      axiosInstance.get('/api/v1/disputes'),
+      axiosInstance.get('/api/v1/products')
     ])
       .then(([vendorsRes, ordersRes, disputesRes, productsRes]) => {
         const vendors = vendorsRes.data;

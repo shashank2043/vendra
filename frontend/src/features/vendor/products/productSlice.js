@@ -5,7 +5,7 @@ export const fetchVendorProducts = createAsyncThunk(
   'vendorProducts/fetchVendorProducts',
   async (vendorId, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/products?vendorId=${vendorId}`);
+      const response = await axiosInstance.get(`/api/v1/products?vendorId=${vendorId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to fetch vendor products');
@@ -17,14 +17,8 @@ export const createProduct = createAsyncThunk(
   'vendorProducts/createProduct',
   async (productData, { rejectWithValue }) => {
     try {
-      // Default new products to PENDING moderation status
-      const payload = {
-        ...productData,
-        moderationStatus: 'PENDING',
-        rating: 5.0,
-        id: `prod-${Date.now()}`
-      };
-      const response = await axiosInstance.post('/products', payload);
+      // Backend assigns id and default moderation status.
+      const response = await axiosInstance.post('/api/v1/products', productData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to create product');
@@ -36,7 +30,7 @@ export const updateProduct = createAsyncThunk(
   'vendorProducts/updateProduct',
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.patch(`/products/${id}`, data);
+      const response = await axiosInstance.put(`/api/v1/products/${id}`, data);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to update product');
@@ -48,7 +42,7 @@ export const deleteProduct = createAsyncThunk(
   'vendorProducts/deleteProduct',
   async (id, { rejectWithValue }) => {
     try {
-      await axiosInstance.delete(`/products/${id}`);
+      await axiosInstance.delete(`/api/v1/products/${id}`);
       return id;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to delete product');

@@ -21,8 +21,8 @@ const HomePage = () => {
     dispatch(fetchProducts());
     
     Promise.all([
-      axiosInstance.get('/categories'),
-      axiosInstance.get('/vendorProfiles?approvalStatus=APPROVED')
+      axiosInstance.get('/api/v1/categories'),
+      axiosInstance.get('/api/v1/vendors?approvalStatus=APPROVED')
     ]).then(([catRes, vendorRes]) => {
       setCategories(catRes.data);
       setVendors(vendorRes.data);

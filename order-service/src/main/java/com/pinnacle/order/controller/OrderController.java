@@ -3,6 +3,7 @@ package com.pinnacle.order.controller;
 import com.pinnacle.order.dto.ApiResponse;
 import com.pinnacle.order.dto.OrderRequest;
 import com.pinnacle.order.dto.OrderResponse;
+import com.pinnacle.order.dto.OrderStatusUpdateRequest;
 import com.pinnacle.order.exception.BadRequestException;
 import com.pinnacle.order.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -58,5 +59,26 @@ public class OrderController {
         validateRole(roles, "customer");
         List<OrderResponse> response = orderService.getOrdersByCustomer(username);
         return ResponseEntity.ok(ApiResponse.success(response, "Customer orders retrieved successfully"));
+    }
+
+    @GetMapping
+    @Operation(summary = "List/filter orders by userId, vendorId and/or status (admin)")
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getOrders(
+            @RequestParam(value = "userId", required = false) String userId,
+            @RequestParam(value = "vendorId", required = false) String vendorId,
+            @RequestParam(value = "status", required = false) String status) {
+
+        List<OrderResponse> response = orderService.getOrders(userId, vendorId, status);
+        return ResponseEntity.ok(ApiResponse.success(response, "Orders retrieved successfully"));
+    }
+
+    @PatchMapping("/{id}")
+    @Operation(summary = "Update order status; auto-assigns delivery partner on PROCESSING/SHIPPED")
+    public ResponseEntity<ApiResponse<OrderResponse>> updateStatus(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody OrderStatusUpdateRequest request) {
+
+        OrderResponse response = orderService.updateStatus(id, request.getStatus());
+        return ResponseEntity.ok(ApiResponse.success(response, "Order status updated successfully"));
     }
 }

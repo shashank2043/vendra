@@ -6,7 +6,7 @@ export const fetchOrders = createAsyncThunk(
   'orders/fetchOrders',
   async (userId, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/orders?userId=${userId}`);
+      const response = await axiosInstance.get(`/api/v1/orders?userId=${userId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to fetch orders');
@@ -18,38 +18,10 @@ export const fetchOrderById = createAsyncThunk(
   'orders/fetchOrderById',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/orders/${id}`);
+      const response = await axiosInstance.get(`/api/v1/orders/${id}`);
       return response.data;
     } catch (error) {
-      console.warn(`Failed to fetch order ${id} from API, using fallback dummy data.`, error);
-      return {
-        id: id || 'ord-999-vp-1',
-        parentOrderId: 'ord-999',
-        userId: 'user-customer-1',
-        userName: 'John Customer',
-        vendorId: 'vp-1',
-        items: [
-          {
-            productId: 'prod-1',
-            name: 'Hand-Thrown Ceramic Mug',
-            price: 32,
-            quantity: 1,
-            vendorId: 'vp-1',
-            imageUrl: '/images/ceramic_mug.jpg'
-          }
-        ],
-        total: 32,
-        status: 'PLACED',
-        createdAt: new Date().toISOString(),
-        shippingAddress: {
-          fullName: 'John Customer',
-          addressLine1: '123 Main St',
-          city: 'Seattle',
-          postalCode: '98101',
-          country: 'USA'
-        },
-        paymentMethod: 'Razorpay'
-      };
+      return rejectWithValue(error.message || 'Failed to fetch order details');
     }
   }
 );
@@ -58,7 +30,7 @@ export const placeOrder = createAsyncThunk(
   'orders/placeOrder',
   async (orderData, { dispatch, rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post('/orders', orderData);
+      const response = await axiosInstance.post('/api/v1/orders', orderData);
       dispatch(clearCart());
       return response.data;
     } catch (error) {

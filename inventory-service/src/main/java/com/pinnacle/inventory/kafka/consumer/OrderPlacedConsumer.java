@@ -26,7 +26,8 @@ public class OrderPlacedConsumer {
                 event.getOrderId(), event.getProductId(), event.getQuantity());
 
         try {
-            boolean success = inventoryService.reserveStock(event.getProductId(), event.getQuantity());
+            boolean success = inventoryService.reserveStock(
+                    String.valueOf(event.getOrderId()), event.getProductId(), event.getQuantity());
             if (success) {
                 log.info("Inventory successfully reserved for order: {}", event.getOrderId());
                 InventoryReservedEvent reservedEvent = InventoryReservedEvent.builder()

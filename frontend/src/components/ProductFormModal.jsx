@@ -14,7 +14,7 @@ const ProductFormModal = ({ open, onClose, onSave, product }) => {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    axiosInstance.get('/categories')
+    axiosInstance.get('/api/v1/categories')
       .then(res => setCategories(res.data))
       .catch(err => console.error('Error fetching categories in modal:', err));
   }, []);

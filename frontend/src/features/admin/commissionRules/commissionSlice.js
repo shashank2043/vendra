@@ -5,7 +5,7 @@ export const fetchCommissionRules = createAsyncThunk(
   'adminCommission/fetchCommissionRules',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/commissionRules');
+      const response = await axiosInstance.get('/api/v1/commission/rules');
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to fetch commission rules');
@@ -17,11 +17,7 @@ export const createCommissionRule = createAsyncThunk(
   'adminCommission/createCommissionRule',
   async (ruleData, { rejectWithValue }) => {
     try {
-      const payload = {
-        ...ruleData,
-        id: `rule-${Date.now()}`
-      };
-      const response = await axiosInstance.post('/commissionRules', payload);
+      const response = await axiosInstance.post('/api/v1/commission/rules', ruleData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to create commission rule');
@@ -33,7 +29,7 @@ export const updateCommissionRule = createAsyncThunk(
   'adminCommission/updateCommissionRule',
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.patch(`/commissionRules/${id}`, data);
+      const response = await axiosInstance.patch(`/api/v1/commission/rules/${id}`, data);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to update commission rule');

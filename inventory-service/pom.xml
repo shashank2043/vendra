@@ -50,6 +50,12 @@
             <artifactId>spring-cloud-starter-config</artifactId>
         </dependency>
 
+        <!-- OpenFeign (service-to-service stock sync) -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+
         <!-- MySQL Connector -->
         <dependency>
             <groupId>com.mysql</groupId>

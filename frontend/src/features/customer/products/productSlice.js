@@ -5,7 +5,7 @@ export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/products');
+      const response = await axiosInstance.get('/api/v1/products');
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to fetch products');
@@ -17,7 +17,7 @@ export const fetchProductById = createAsyncThunk(
   'products/fetchProductById',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/products/${id}`);
+      const response = await axiosInstance.get(`/api/v1/products/${id}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to fetch product details');
@@ -27,9 +27,9 @@ export const fetchProductById = createAsyncThunk(
 
 export const fetchProductsByCategory = createAsyncThunk(
   'products/fetchProductsByCategory',
-  async (categoryId, { rejectWithValue }) => {
+  async (category, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/products?categoryId=${categoryId}`);
+      const response = await axiosInstance.get(`/api/v1/products?category=${encodeURIComponent(category)}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to fetch products by category');

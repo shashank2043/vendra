@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Box, TextField, IconButton, Badge, Menu, MenuItem, Avatar, InputAdornment } from '@mui/material';
-import { Search, Heart, ShoppingCart, User, LogOut, Package, Sun, Moon } from 'lucide-react';
+import { Search, Heart, ShoppingCart, LogOut, Package } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../../app/hooks';
-import { logout, toggleThemeMode } from '../../../features/auth/authSlice';
+import { logout } from '../../../features/auth/authSlice';
 import { selectCartCount } from '../../../features/customer/cart/cartSlice';
 import NotificationBell from '../../../features/notifications/components/NotificationBell';
 import NotificationDropdown from '../../../features/notifications/components/NotificationDropdown';
@@ -16,8 +16,6 @@ const Navbar = () => {
   const { user } = useAppSelector((state) => state.auth);
   const cartCount = useAppSelector(selectCartCount);
   const wishlistCount = useAppSelector((state) => state.wishlist.productIds.length);
-
-  const themeMode = useAppSelector((state) => state.auth.themeMode) || 'light';
 
   const [searchQuery, setSearchQuery] = useState('');
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
@@ -141,11 +139,6 @@ const Navbar = () => {
               <Badge badgeContent={cartCount} color="error">
                 <ShoppingCart size={22} />
               </Badge>
-            </IconButton>
-
-            {/* Theme Switcher */}
-            <IconButton color="inherit" onClick={() => dispatch(toggleThemeMode())} sx={{ mr: 0.5 }}>
-              {themeMode === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </IconButton>
 
             {/* Notifications */}

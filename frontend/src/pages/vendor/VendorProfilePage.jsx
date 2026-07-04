@@ -20,10 +20,10 @@ const VendorProfilePage = () => {
 
   useEffect(() => {
     if (!user) return;
-    axiosInstance.get(`/vendorProfiles?userId=${user.id}`)
+    axiosInstance.get(`/api/v1/vendors/${user.id}`)
       .then(res => {
-        if (res.data && res.data.length > 0) {
-          const v = res.data[0];
+        const v = res.data;
+        if (v) {
           setVendor(v);
           setBusinessName(v.businessName || '');
           setContactPhone(v.contactPhone || '');
@@ -49,7 +49,7 @@ const VendorProfilePage = () => {
       description
     };
 
-    axiosInstance.patch(`/vendorProfiles/${vendor.id}`, updatedProfile)
+    axiosInstance.put(`/api/v1/vendors/${vendor.id}`, updatedProfile)
       .then(() => {
         toast.success('Shop profile updated successfully!');
       })

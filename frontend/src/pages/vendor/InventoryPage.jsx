@@ -20,16 +20,13 @@ const InventoryPage = () => {
 
   useEffect(() => {
     if (!user) return;
-    axiosInstance.get(`/vendorProfiles?userId=${user.id}`)
-      .then(res => {
-        if (res.data && res.data.length > 0) {
-          const v = res.data[0];
-          setVendor(v);
-          dispatch(fetchInventory(v.id));
-        }
-      });
+    const vendorId = user.id;
+    axiosInstance.get(`/api/v1/vendors/${vendorId}`)
+      .then(res => setVendor(res.data))
+      .catch(() => {});
+    dispatch(fetchInventory(vendorId));
 
-    axiosInstance.get('/categories')
+    axiosInstance.get('/api/v1/categories')
       .then(res => {
         const map = {};
         res.data.forEach(c => {

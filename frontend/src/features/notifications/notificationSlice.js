@@ -5,16 +5,16 @@ export const fetchNotifications = createAsyncThunk(
   'notifications/fetchNotifications',
   async ({ role, userId }, { rejectWithValue }) => {
     try {
-      // Query notifications. We filter by role first.
-      let url = '/notifications';
-      if (role) {
-        url += `?role=${role}`;
-      }
-      const response = await axiosInstance.get(url);
-      
-      // Filter in client-side to handle case where notifications are user-specific or global for the role
-      const data = response.data.filter(n => !n.userId || n.userId === userId);
-      
+      const params = new URLSearchParams();
+      if (role) params.append('role', role);
+      if (userId) params.append('userId', userId);
+      const query = params.toString();
+      const response = await axiosInstance.get(`/notifications${query ? `?${query}` : ''}`);
+
+      // Keep a client-side guard in case the endpoint returns role-wide notifications.
+      const list = Array.isArray(response.data) ? response.data : [];
+      const data = list.filter(n => !n.userId || n.userId === userId);
+
       // Sort notifications by date/id descending (newest first)
       return data.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     } catch (error) {

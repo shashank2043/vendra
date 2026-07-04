@@ -25,10 +25,10 @@ const CheckoutPage = () => {
   const [paymentProcessing, setPaymentProcessing] = useState(false);
 
   useEffect(() => {
-    axiosInstance.get('/vendorProfiles')
+    axiosInstance.get('/api/v1/vendors')
       .then(res => {
         const map = {};
-        res.data.forEach(v => {
+        (res.data || []).forEach(v => {
           map[v.id] = v.businessName;
         });
         setVendorNames(map);
@@ -136,46 +136,70 @@ const CheckoutPage = () => {
     return groups;
   }, {});
 
+  // Best-effort payment: mark each created order as paid. Backend supports
+  // a placeholder/mock mode, so failures here must not block order completion.
+  const settlePayments = async (createdOrders) => {
+    try {
+      for (const ord of createdOrders) {
+        if (!ord?.id) continue;
+        let razorpayOrderId;
+        try {
+          const payRes = await axiosInstance.post('/api/v1/payments/create-order', {
+            orderId: ord.id,
+            amount: ord.total,
+          });
+          razorpayOrderId = payRes.data?.razorpayOrderId;
+        } catch (e) {
+          console.warn('create-order failed (continuing):', e);
+        }
+        await axiosInstance.post('/api/v1/payments/verify', {
+          orderId: ord.id,
+          razorpayOrderId,
+          paymentId: `mock_${Date.now()}`,
+          signature: 'mock_signature',
+        });
+      }
+    } catch (e) {
+      console.warn('Payment settlement skipped:', e);
+    }
+  };
+
   const handlePlaceOrder = async () => {
     setSubmittingOrder(true);
-    const parentOrderId = `ord-${Date.now()}`;
-    const orderPromises = [];
 
     try {
-      // Split the order per vendor to make vendor queries independent and elegant
-      Object.keys(groupedItems).forEach((vendorId) => {
+      // Split the order per vendor; the backend generates ids + parentOrderId.
+      const orderPromises = Object.keys(groupedItems).map((vendorId) => {
         const items = groupedItems[vendorId];
         const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
 
         const vendorOrder = {
-          id: `${parentOrderId}-${vendorId}`,
-          parentOrderId,
           userId: user.id,
-          userName: user.name || 'Anonymous Customer',
           vendorId,
           items,
           total: subtotal,
-          status: 'PLACED',
-          createdAt: new Date().toISOString(),
           shippingAddress: address,
-          paymentMethod: 'Razorpay'
+          paymentMethod: paymentMethod || 'Razorpay',
+          priority: 'STANDARD',
         };
 
-        orderPromises.push(dispatch(placeOrder(vendorOrder)).unwrap());
+        return dispatch(placeOrder(vendorOrder)).unwrap();
       });
 
-      await Promise.all(orderPromises);
+      const createdOrders = await Promise.all(orderPromises);
+      await settlePayments(createdOrders);
       toast.success('Your order has been placed successfully!');
-      
+
       // Seed a platform notification for this purchase
-      await axiosInstance.post('/notifications', {
-        id: `notif-${Date.now()}`,
-        role: 'CUSTOMER',
-        userId: user.id,
-        message: `Order #${parentOrderId} has been placed successfully! Tracking available in your orders.`,
-        read: false,
-        createdAt: new Date().toISOString()
-      });
+      try {
+        await axiosInstance.post('/notifications', {
+          role: 'CUSTOMER',
+          userId: user.id,
+          message: 'Your order has been placed successfully! Tracking available in your orders.',
+        });
+      } catch (e) {
+        console.warn('Notification seed skipped:', e);
+      }
 
       dispatch(resetCheckout());
       navigate('/customer/orders');

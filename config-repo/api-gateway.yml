@@ -1,5 +1,5 @@
 server:
-  port: 8090
+  port: 8080
 
 spring:
   cloud:
@@ -9,86 +9,181 @@ spring:
           enabled: true
           lower-case-service-id: true
       routes:
-        # Standard routing rules
+        # ---- auth ----
         - id: auth-service
           uri: lb://auth-service
           predicates:
             - Path=/auth/**
           filters:
             - StripPrefix=0
+
+        # ---- notifications ----
         - id: notification-service
           uri: lb://notification-service
           predicates:
             - Path=/notifications/**
           filters:
             - StripPrefix=0
+
+        # ---- product-service (products + categories) ----
         - id: product-service
           uri: lb://product-service
           predicates:
             - Path=/api/v1/products/**
           filters:
             - StripPrefix=0
+        - id: product-service-categories
+          uri: lb://product-service
+          predicates:
+            - Path=/api/v1/categories/**
+          filters:
+            - StripPrefix=0
+
+        # ---- review-service ----
+        - id: review-service
+          uri: lb://review-service
+          predicates:
+            - Path=/api/v1/reviews/**
+          filters:
+            - StripPrefix=0
+
+        # ---- order-service (orders + disputes + analytics + delivery + commission) ----
         - id: order-service
           uri: lb://order-service
           predicates:
             - Path=/api/v1/orders/**
           filters:
             - StripPrefix=0
+        - id: order-service-disputes
+          uri: lb://order-service
+          predicates:
+            - Path=/api/v1/disputes/**
+          filters:
+            - StripPrefix=0
+        - id: order-service-analytics
+          uri: lb://order-service
+          predicates:
+            - Path=/api/v1/analytics/**
+          filters:
+            - StripPrefix=0
+        - id: order-service-delivery
+          uri: lb://order-service
+          predicates:
+            - Path=/api/v1/delivery/**
+          filters:
+            - StripPrefix=0
+        - id: order-service-commission
+          uri: lb://order-service
+          predicates:
+            - Path=/api/v1/commission/**
+          filters:
+            - StripPrefix=0
+
+        # ---- payment-service ----
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/v1/payments/**
+          filters:
+            - StripPrefix=0
+
+        # ---- inventory-service ----
         - id: inventory-service
           uri: lb://inventory-service
           predicates:
             - Path=/api/v1/inventory/**
           filters:
             - StripPrefix=0
+
+        # ---- user-service (users + vendors + trust-scores + admin) ----
         - id: user-service
           uri: lb://user-service
           predicates:
             - Path=/api/v1/users/**
           filters:
             - StripPrefix=0
+        - id: user-service-vendors
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/vendors/**
+          filters:
+            - StripPrefix=0
+        - id: user-service-trust
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/trust-scores/**
+          filters:
+            - StripPrefix=0
+        - id: user-service-admin
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/admin/**
+          filters:
+            - StripPrefix=0
 
-        # Swagger API documentation routing rules
+        # ---- report-service ----
+        - id: report-service
+          uri: lb://report-service
+          predicates:
+            - Path=/api/v1/reports/**
+          filters:
+            - StripPrefix=0
+
+        # ---- Swagger API documentation routing rules ----
         - id: auth-service-swagger
           uri: lb://auth-service
           predicates:
             - Path=/swagger/auth-service/**
           filters:
             - RewritePath=/swagger/auth-service/(?<segment>.*), /${segment}
-
         - id: notification-service-swagger
           uri: lb://notification-service
           predicates:
             - Path=/swagger/notification-service/**
           filters:
             - RewritePath=/swagger/notification-service/(?<segment>.*), /${segment}
-
         - id: product-service-swagger
           uri: lb://product-service
           predicates:
             - Path=/swagger/product-service/**
           filters:
             - RewritePath=/swagger/product-service/(?<segment>.*), /${segment}
-
+        - id: review-service-swagger
+          uri: lb://review-service
+          predicates:
+            - Path=/swagger/review-service/**
+          filters:
+            - RewritePath=/swagger/review-service/(?<segment>.*), /${segment}
         - id: order-service-swagger
           uri: lb://order-service
           predicates:
             - Path=/swagger/order-service/**
           filters:
             - RewritePath=/swagger/order-service/(?<segment>.*), /${segment}
-
+        - id: payment-service-swagger
+          uri: lb://payment-service
+          predicates:
+            - Path=/swagger/payment-service/**
+          filters:
+            - RewritePath=/swagger/payment-service/(?<segment>.*), /${segment}
         - id: inventory-service-swagger
           uri: lb://inventory-service
           predicates:
             - Path=/swagger/inventory-service/**
           filters:
             - RewritePath=/swagger/inventory-service/(?<segment>.*), /${segment}
-
         - id: user-service-swagger
           uri: lb://user-service
           predicates:
             - Path=/swagger/user-service/**
           filters:
             - RewritePath=/swagger/user-service/(?<segment>.*), /${segment}
+        - id: report-service-swagger
+          uri: lb://report-service
+          predicates:
+            - Path=/swagger/report-service/**
+          filters:
+            - RewritePath=/swagger/report-service/(?<segment>.*), /${segment}
 
       globalcors:
         cors-configurations:
@@ -98,6 +193,7 @@ spring:
               - GET
               - POST
               - PUT
+              - PATCH
               - DELETE
               - OPTIONS
             allowedHeaders: "*"
@@ -114,12 +210,18 @@ springdoc:
         url: /swagger/notification-service/v3/api-docs
       - name: product-service
         url: /swagger/product-service/v3/api-docs
+      - name: review-service
+        url: /swagger/review-service/v3/api-docs
       - name: order-service
         url: /swagger/order-service/v3/api-docs
+      - name: payment-service
+        url: /swagger/payment-service/v3/api-docs
       - name: inventory-service
         url: /swagger/inventory-service/v3/api-docs
       - name: user-service
         url: /swagger/user-service/v3/api-docs
+      - name: report-service
+        url: /swagger/report-service/v3/api-docs
     config-url: /v3/api-docs/swagger-config
   api-docs:
     enabled: true

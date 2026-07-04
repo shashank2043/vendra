@@ -5,7 +5,7 @@ export const fetchVendorOrders = createAsyncThunk(
   'vendorOrders/fetchVendorOrders',
   async (vendorId, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/orders?vendorId=${vendorId}`);
+      const response = await axiosInstance.get(`/api/v1/orders?vendorId=${vendorId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to fetch vendor orders');
@@ -17,7 +17,7 @@ export const updateOrderStatus = createAsyncThunk(
   'vendorOrders/updateOrderStatus',
   async ({ orderId, status }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.patch(`/orders/${orderId}`, { status });
+      const response = await axiosInstance.patch(`/api/v1/orders/${orderId}`, { status });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to update order status');

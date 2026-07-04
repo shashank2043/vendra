@@ -111,14 +111,11 @@ const OrdersPage = () => {
 
   useEffect(() => {
     if (!user) return;
-    axiosInstance.get(`/vendorProfiles?userId=${user.id}`)
-      .then(res => {
-        if (res.data && res.data.length > 0) {
-          const v = res.data[0];
-          setVendor(v);
-          dispatch(fetchVendorOrders(v.id));
-        }
-      });
+    const vendorId = user.id;
+    axiosInstance.get(`/api/v1/vendors/${vendorId}`)
+      .then(res => setVendor(res.data))
+      .catch(() => {});
+    dispatch(fetchVendorOrders(vendorId));
   }, [dispatch, user]);
 
   const handleStatusUpdate = (orderId, status) => {

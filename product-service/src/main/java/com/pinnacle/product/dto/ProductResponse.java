@@ -19,7 +19,10 @@ public class ProductResponse {
     private BigDecimal price;
     private String vendorId;
     private String category;
+    private String imageUrl;
+    private Integer stock;
     private Map<String, Object> attributes;
     private boolean approved;
-    private String moderationComment;
+    private String moderationStatus;
+    private String moderationFeedback;
 }

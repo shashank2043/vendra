@@ -5,7 +5,7 @@ export const fetchAllOrders = createAsyncThunk(
   'adminOrders/fetchAllOrders',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/orders');
+      const response = await axiosInstance.get('/api/v1/orders');
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to fetch platform orders');

@@ -5,7 +5,8 @@ export const fetchModerationQueue = createAsyncThunk(
   'adminModeration/fetchModerationQueue',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/products');
+      // Fetch all products including unapproved ones for the moderation queue.
+      const response = await axiosInstance.get('/api/v1/products?approved=false');
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to fetch moderation queue');
@@ -17,7 +18,7 @@ export const approveProduct = createAsyncThunk(
   'adminModeration/approveProduct',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.patch(`/products/${id}`, { moderationStatus: 'APPROVED' });
+      const response = await axiosInstance.post(`/api/v1/products/${id}/moderate?approved=true`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to approve product');
@@ -29,10 +30,9 @@ export const rejectProduct = createAsyncThunk(
   'adminModeration/rejectProduct',
   async ({ id, reason }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.patch(`/products/${id}`, { 
-        moderationStatus: 'REJECTED',
-        moderationFeedback: reason 
-      });
+      const response = await axiosInstance.post(
+        `/api/v1/products/${id}/moderate?approved=false&comment=${encodeURIComponent(reason || '')}`
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to reject product');

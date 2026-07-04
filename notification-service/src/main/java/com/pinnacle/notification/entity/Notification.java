@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Data
@@ -20,21 +21,39 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column
     private String recipient;
 
-    @Column(nullable = false)
+    @Column
     private String subject;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
     private String body;
 
-    @Column(nullable = false)
+    @Column
     private String type; // EMAIL, SMS, PUSH
 
-    @Column(nullable = false)
+    @Column
     private String status; // PENDING, SENT, FAILED
 
     @Column(name = "sent_at")
     private LocalDateTime sentAt;
+
+    // ---- Vendra extension fields (frontend depends on these exact names) ----
+
+    @Column
+    private String role; // CUSTOMER, VENDOR, ADMIN
+
+    @Column(name = "user_id")
+    private String userId;
+
+    @Column(columnDefinition = "TEXT")
+    private String message;
+
+    @Column(name = "is_read")
+    @Builder.Default
+    private boolean read = false;
+
+    @Column(name = "created_at")
+    private Instant createdAt;
 }

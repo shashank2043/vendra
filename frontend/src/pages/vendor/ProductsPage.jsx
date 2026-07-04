@@ -23,16 +23,13 @@ const ProductsPage = () => {
 
   useEffect(() => {
     if (!user) return;
-    axiosInstance.get(`/vendorProfiles?userId=${user.id}`)
-      .then(res => {
-        if (res.data && res.data.length > 0) {
-          const v = res.data[0];
-          setVendor(v);
-          dispatch(fetchVendorProducts(v.id));
-        }
-      });
+    const vendorId = user.id;
+    axiosInstance.get(`/api/v1/vendors/${vendorId}`)
+      .then(res => setVendor(res.data))
+      .catch(() => {});
+    dispatch(fetchVendorProducts(vendorId));
 
-    axiosInstance.get('/categories')
+    axiosInstance.get('/api/v1/categories')
       .then(res => {
         const map = {};
         res.data.forEach(c => {
@@ -61,8 +58,8 @@ const ProductsPage = () => {
   };
 
   const handleCreate = (data) => {
-    if (!vendor) return;
-    dispatch(createProduct({ ...data, vendorId: vendor.id }))
+    if (!user) return;
+    dispatch(createProduct({ ...data, vendorId: user.id }))
       .unwrap()
       .then(() => {
         toast.success('Product submitted for moderation!');

@@ -48,26 +48,21 @@ const ProductDetailPage = () => {
       setActiveImage(product.imageUrls?.[0] || '');
       
       // Fetch vendor details
-      axiosInstance.get(`/vendorProfiles/${product.vendorId}`)
-        .then(res => setVendor(res.data))
-        .catch(() => {
-          axiosInstance.get(`/vendorProfiles?id=${product.vendorId}`)
-            .then(res => {
-              if (res.data && res.data.length > 0) {
-                setVendor(res.data[0]);
-              }
-            });
-        });
+      if (product.vendorId) {
+        axiosInstance.get(`/api/v1/vendors/${product.vendorId}`)
+          .then(res => setVendor(res.data))
+          .catch(() => {});
+      }
     }
   }, [product]);
 
   // Check eligibility to review
   useEffect(() => {
     if (isAuthenticated && user && product) {
-      axiosInstance.get(`/orders?userId=${user.id}&status=DELIVERED`)
+      axiosInstance.get(`/api/v1/orders?userId=${user.id}&status=DELIVERED`)
         .then((res) => {
-          const hasPurchased = res.data.some(order => 
-            order.items.some(item => item.productId === product.id)
+          const hasPurchased = (res.data || []).some(order =>
+            (order.items || []).some(item => item.productId === product.id)
           );
           setEligibleToReview(hasPurchased);
         })
@@ -102,13 +97,10 @@ const ProductDetailPage = () => {
 
     setSubmittingReview(true);
     const reviewData = {
-      id: `rev-${Date.now()}`,
       productId: product.id,
-      userId: user.id,
-      userName: user.name || 'Anonymous User',
+      vendorId: product.vendorId,
       rating: userRating,
       comment: userComment.trim(),
-      createdAt: new Date().toISOString()
     };
 
     try {

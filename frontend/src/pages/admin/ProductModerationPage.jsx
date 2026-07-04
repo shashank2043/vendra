@@ -26,11 +26,11 @@ const ProductModerationPage = () => {
   useEffect(() => {
     dispatch(fetchModerationQueue());
 
-    axiosInstance.get('/categories')
+    axiosInstance.get('/api/v1/categories')
       .then(res => setCategories(res.data))
       .catch(err => console.error(err));
 
-    axiosInstance.get('/vendorProfiles')
+    axiosInstance.get('/api/v1/vendors')
       .then(res => setVendors(res.data))
       .catch(err => console.error(err));
   }, [dispatch]);

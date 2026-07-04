@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -32,6 +34,22 @@ public class UserProfileServiceImpl implements UserProfileService {
         log.info("Creating user profile for: {} with role: {}", request.getUsername(), request.getRole());
         UserProfile profile = userProfileMapper.toEntity(request);
         profile.setId(request.getUserId());
+        profile.setCreatedAt(Instant.now());
+        if (profile.getPriorityTier() == null) {
+            profile.setPriorityTier("STANDARD");
+        }
+        profile.setSuspended(false);
+
+        if ("VENDOR".equalsIgnoreCase(request.getRole())) {
+            // New vendors start as PENDING (or APPROVED if pre-approved) with a neutral baseline
+            profile.setApprovalStatus(request.isApproved() ? "APPROVED" : "PENDING");
+            profile.setIsNew(true);
+            profile.setTotalOrders(0);
+            if (profile.getTrustScore() == null) {
+                profile.setTrustScore(60.0); // baseline so new vendors are not buried
+            }
+        }
+
         UserProfile savedProfile = userProfileRepository.save(profile);
         return userProfileMapper.toResponse(savedProfile);
     }
@@ -72,6 +90,7 @@ public class UserProfileServiceImpl implements UserProfileService {
 
         // Vendor updates require admin approval
         profile.setApproved(false);
+        profile.setApprovalStatus("PENDING");
         userProfileRepository.save(profile);
 
         // Deactivate vendor account in Keycloak via Feign Client
@@ -91,6 +110,7 @@ public class UserProfileServiceImpl implements UserProfileService {
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user ID: " + id));
 
         profile.setApproved(true);
+        profile.setApprovalStatus("APPROVED");
         userProfileRepository.save(profile);
 
         // Reactivate vendor account in Keycloak via Feign Client

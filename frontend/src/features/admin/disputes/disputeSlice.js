@@ -5,7 +5,7 @@ export const fetchDisputes = createAsyncThunk(
   'adminDisputes/fetchDisputes',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/disputes');
+      const response = await axiosInstance.get('/api/v1/disputes');
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to fetch disputes');
@@ -17,9 +17,9 @@ export const resolveDispute = createAsyncThunk(
   'adminDisputes/resolveDispute',
   async ({ id, notes, resolutionStatus }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.patch(`/disputes/${id}`, { 
+      const response = await axiosInstance.patch(`/api/v1/disputes/${id}`, {
         status: resolutionStatus,
-        resolutionNotes: notes 
+        resolutionNotes: notes
       });
       return response.data;
     } catch (error) {
@@ -32,7 +32,7 @@ export const escalateDispute = createAsyncThunk(
   'adminDisputes/escalateDispute',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.patch(`/disputes/${id}`, { status: 'ESCALATED' });
+      const response = await axiosInstance.patch(`/api/v1/disputes/${id}`, { status: 'ESCALATED' });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to escalate dispute');

@@ -19,7 +19,7 @@ const OrdersPage = () => {
   useEffect(() => {
     dispatch(fetchAllOrders());
 
-    axiosInstance.get('/vendorProfiles')
+    axiosInstance.get('/api/v1/vendors')
       .then(res => {
         const map = {};
         res.data.forEach(v => {

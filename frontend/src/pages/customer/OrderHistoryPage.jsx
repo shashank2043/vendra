@@ -19,7 +19,7 @@ const OrderHistoryPage = () => {
   useEffect(() => {
     if (user) {
       dispatch(fetchOrders(user.id));
-      axiosInstance.get('/vendorProfiles')
+      axiosInstance.get('/api/v1/vendors')
         .then(res => {
           const map = {};
           res.data.forEach(v => {

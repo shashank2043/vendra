@@ -279,6 +279,73 @@ services:
       discovery-server:
         condition: service_healthy
 
+  review-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: review-service
+    container_name: vendra-review-service
+    ports:
+      - "8088:8088"
+    environment:
+      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL:-http://config-server:8888}
+      EUREKA_SERVER_URL: ${EUREKA_SERVER_URL:-http://discovery-server:8761/eureka/}
+      MONGODB_HOST: mongodb
+      MONGODB_PORT: 27017
+    depends_on:
+      mongodb:
+        condition: service_started
+      config-server:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: payment-service
+    container_name: vendra-payment-service
+    ports:
+      - "8089:8089"
+    environment:
+      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL:-http://config-server:8888}
+      EUREKA_SERVER_URL: ${EUREKA_SERVER_URL:-http://discovery-server:8761/eureka/}
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: payment_db
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-rzp_test_placeholder}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-placeholdersecret}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+
+  report-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: report-service
+    container_name: vendra-report-service
+    ports:
+      - "8092:8092"
+    environment:
+      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL:-http://config-server:8888}
+      EUREKA_SERVER_URL: ${EUREKA_SERVER_URL:-http://discovery-server:8761/eureka/}
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+
 volumes:
   mysql_data:
   mongodb_data:

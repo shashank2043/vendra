@@ -5,11 +5,13 @@ export const fetchAnalytics = createAsyncThunk(
   'vendorAnalytics/fetchAnalytics',
   async (vendorId, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/analytics?vendorId=${vendorId}`);
-      if (response.data && response.data.length > 0) {
-        return response.data[0];
+      const response = await axiosInstance.get(`/api/v1/analytics?vendorId=${vendorId}`);
+      const data = response.data;
+      // Endpoint may return a single object or a list; normalise to one object.
+      if (Array.isArray(data)) {
+        return data.length > 0 ? data[0] : { salesOverTime: [], categoryBreakdown: [] };
       }
-      return { salesOverTime: [], categoryBreakdown: [] };
+      return data || { salesOverTime: [], categoryBreakdown: [] };
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to fetch analytics');
     }

@@ -20,21 +20,13 @@ const ProductCard = ({ product }) => {
   useEffect(() => {
     let active = true;
     if (product.vendorId) {
-      axiosInstance.get(`/vendorProfiles/${product.vendorId}`)
+      axiosInstance.get(`/api/v1/vendors/${product.vendorId}`)
         .then(res => {
           if (active && res.data && res.data.businessName) {
             setVendorName(res.data.businessName);
           }
         })
-        .catch(() => {
-          // Fallback to search query parameter
-          axiosInstance.get(`/vendorProfiles?id=${product.vendorId}`)
-            .then(res => {
-              if (active && res.data && res.data.length > 0) {
-                setVendorName(res.data[0].businessName);
-              }
-            });
-        });
+        .catch(() => {});
     }
     return () => { active = false; };
   }, [product.vendorId]);

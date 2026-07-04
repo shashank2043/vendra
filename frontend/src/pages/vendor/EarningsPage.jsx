@@ -14,14 +14,11 @@ const EarningsPage = () => {
 
   useEffect(() => {
     if (!user) return;
-    axiosInstance.get(`/vendorProfiles?userId=${user.id}`)
-      .then(res => {
-        if (res.data && res.data.length > 0) {
-          const v = res.data[0];
-          setVendor(v);
-          dispatch(fetchCommissionLedger(v.id));
-        }
-      });
+    const vendorId = user.id;
+    axiosInstance.get(`/api/v1/vendors/${vendorId}`)
+      .then(res => setVendor(res.data))
+      .catch(() => {});
+    dispatch(fetchCommissionLedger(vendorId));
   }, [dispatch, user]);
 
   // Calculations for financial stats cards

@@ -5,7 +5,7 @@ export const fetchReviewsByProduct = createAsyncThunk(
   'reviews/fetchReviewsByProduct',
   async (productId, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/reviews?productId=${productId}`);
+      const response = await axiosInstance.get(`/api/v1/reviews?productId=${productId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to fetch reviews');
@@ -17,7 +17,7 @@ export const submitReview = createAsyncThunk(
   'reviews/submitReview',
   async (reviewData, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post('/reviews', reviewData);
+      const response = await axiosInstance.post('/api/v1/reviews', reviewData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to submit review');
