@@ -153,11 +153,13 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void failOrder(Long id, String reason) {
+        // A newly placed order must remain in PLACED by default. An inventory reservation
+        // shortfall no longer auto-fails the order; it is only logged so it can be reviewed
+        // and handled manually (vendor/admin) or retried once stock is available.
         Order order = orderRepository.findById(id).orElse(null);
-        if (order != null && "PLACED".equals(order.getStatus())) {
-            order.setStatus("FAILED");
-            orderRepository.save(order);
-            log.warn("Order ID: {} status updated to FAILED. Reason: {}", id, reason);
+        if (order != null) {
+            log.warn("Inventory reservation could not be fulfilled for Order ID: {} (left in {} state). Reason: {}",
+                    id, order.getStatus(), reason);
         }
     }
 
