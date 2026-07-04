@@ -1,0 +1,13 @@
+server:
+  port: 8084
+
+spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://${MONGODB_HOST:localhost}:${MONGODB_PORT:27017}/${MONGODB_DB:product_db}}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

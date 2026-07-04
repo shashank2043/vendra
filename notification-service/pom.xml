@@ -63,11 +63,7 @@
             <artifactId>spring-kafka</artifactId>
         </dependency>
 
-        <!-- Common Library -->
-        <dependency>
-            <groupId>com.pinnacle.vendra</groupId>
-            <artifactId>common-library</artifactId>
-        </dependency>
+
 
         <!-- MapStruct -->
         <dependency>

@@ -45,20 +45,20 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Common Library (exclude web servlet stack) -->
+        <!-- JWT -->
         <dependency>
-            <groupId>com.pinnacle.vendra</groupId>
-            <artifactId>common-library</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-web</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.springdoc</groupId>
-                    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- Springdoc Webflux for API Gateway Swagger UI aggregator -->
