@@ -11,6 +11,8 @@ public interface ProductService {
     void deleteProduct(String id, String vendorId);
     ProductResponse getProductById(String id);
     List<ProductResponse> getAllApprovedProducts(String category);
+    List<ProductResponse> getProducts(String vendorId, String category, Boolean approved);
     List<ProductResponse> getProductsByVendor(String vendorId);
     ProductResponse moderateProduct(String id, boolean approved, String comment);
+    ProductResponse updateStock(String id, Integer stock);
 }

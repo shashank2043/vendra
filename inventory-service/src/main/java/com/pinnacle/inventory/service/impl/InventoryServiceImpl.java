@@ -1,16 +1,19 @@
 package com.pinnacle.inventory.service.impl;
 
 import com.pinnacle.inventory.entity.Inventory;
+import com.pinnacle.inventory.entity.StockReservation;
 import com.pinnacle.inventory.dto.InventoryRequest;
 import com.pinnacle.inventory.dto.InventoryResponse;
 import com.pinnacle.inventory.exception.ResourceNotFoundException;
 import com.pinnacle.inventory.mapper.InventoryMapper;
 import com.pinnacle.inventory.repository.InventoryRepository;
+import com.pinnacle.inventory.repository.StockReservationRepository;
 import com.pinnacle.inventory.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +23,7 @@ import java.util.Optional;
 public class InventoryServiceImpl implements InventoryService {
 
     private final InventoryRepository inventoryRepository;
+    private final StockReservationRepository stockReservationRepository;
     private final InventoryMapper inventoryMapper;
 
     @Override
@@ -53,18 +57,29 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public boolean reserveStock(String productId, int quantity) {
+    public boolean reserveStock(String orderId, String productId, int quantity) {
         Optional<Inventory> existing = inventoryRepository.findByProductId(productId);
         if (existing.isEmpty()) {
             return false;
         }
         Inventory inventory = existing.get();
-        if (inventory.getQuantity() < quantity) {
+        int reserved = inventory.getReservedQuantity() == null ? 0 : inventory.getReservedQuantity();
+        int available = inventory.getQuantity() - reserved;
+        if (available < quantity) {
             return false;
         }
-        // Deduct quantity
-        inventory.setQuantity(inventory.getQuantity() - quantity);
+        // Reserve (do not deduct on-hand quantity; scheduler finalizes/releases later)
+        inventory.setReservedQuantity(reserved + quantity);
         inventoryRepository.save(inventory);
+
+        StockReservation reservation = StockReservation.builder()
+                .orderId(orderId)
+                .productId(productId)
+                .quantity(quantity)
+                .status("RESERVED")
+                .createdAt(Instant.now())
+                .build();
+        stockReservationRepository.save(reservation);
         return true;
     }
 }

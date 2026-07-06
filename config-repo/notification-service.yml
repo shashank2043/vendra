@@ -4,8 +4,9 @@ server:
 spring:
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:notification_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
-  # Kafka Config Placeholders for Vendra extension
+  # Kafka Config for Vendra extension
   kafka:
+    enabled: true
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
       group-id: notification-group

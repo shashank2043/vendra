@@ -1,82 +1,76 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import { useFormik } from 'formik';
-import * as yup from 'yup';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import Link from '@mui/material/Link';
-import Stack from '@mui/material/Stack';
-import Container from '@mui/material/Container';
-import LinearProgress from '@mui/material/LinearProgress';
+import { toast } from 'react-toastify';
+import {
+  Box, Card, CardContent, Typography, Button, TextField, Stack, Container,
+  LinearProgress, Link, ToggleButtonGroup, ToggleButton, Grid
+} from '@mui/material';
 import LayersIcon from '@mui/icons-material/Layers';
-
-// Actions & Helpers
-import { setLoading, setError } from '../redux/slices/authSlice';
-import { showNotification } from '../redux/slices/notificationSlice';
-import authService from '../services/authService';
-import { PasswordField } from '../components/CommonComponents';
-
-const validationSchema = yup.object({
-  username: yup
-    .string()
-    .min(3, 'Username must be at least 3 characters')
-    .required('Username is required'),
-  email: yup
-    .string()
-    .email('Enter a valid email address')
-    .required('Email is required'),
-  password: yup
-    .string()
-    .min(6, 'Password must be at least 6 characters')
-    .required('Password is required'),
-  confirmPassword: yup
-    .string()
-    .oneOf([yup.ref('password'), null], 'Passwords must match')
-    .required('Confirm Password is required'),
-});
+import { registerCustomer, registerVendor } from '../features/auth/authSlice';
 
 const RegisterPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const loading = useSelector((state) => state.auth.loading);
 
-  const formik = useFormik({
-    initialValues: {
-      username: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-    },
-    validationSchema: validationSchema,
-    onSubmit: async (values) => {
-      dispatch(setLoading(true));
-      try {
-        await authService.register(values.username, values.email, values.password);
-        
-        dispatch(showNotification({
-          message: 'Account created successfully! You can now log in.',
-          severity: 'success',
-        }));
-        
-        navigate('/login');
-      } catch (err) {
-        console.error('Registration error: ', err);
-        const errMsg = err.response?.data?.message || 'Failed to create account. Username or email might be taken.';
-        dispatch(setError(errMsg));
-        dispatch(showNotification({
-          message: errMsg,
-          severity: 'error',
-        }));
-      } finally {
-        dispatch(setLoading(false));
-      }
-    },
+  const [role, setRole] = useState('CUSTOMER'); // 'CUSTOMER' | 'VENDOR'
+  const [form, setForm] = useState({
+    username: '',
+    email: '',
+    password: '',
+    firstName: '',
+    lastName: '',
+    // customer
+    shippingAddress: '',
+    phoneNumber: '',
+    // vendor
+    businessName: '',
+    businessAddress: '',
+    taxId: '',
   });
+
+  const update = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.username || !form.email || !form.password || !form.firstName || !form.lastName) {
+      toast.error('Please fill in all required fields.');
+      return;
+    }
+    try {
+      if (role === 'VENDOR') {
+        if (!form.businessName) {
+          toast.error('Business name is required.');
+          return;
+        }
+        await dispatch(registerVendor({
+          username: form.username.trim(),
+          email: form.email.trim(),
+          password: form.password,
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          businessName: form.businessName.trim(),
+          businessAddress: form.businessAddress.trim(),
+          taxId: form.taxId.trim(),
+        })).unwrap();
+      } else {
+        await dispatch(registerCustomer({
+          username: form.username.trim(),
+          email: form.email.trim(),
+          password: form.password,
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          shippingAddress: form.shippingAddress.trim(),
+          phoneNumber: form.phoneNumber.trim(),
+        })).unwrap();
+      }
+      toast.success('Account created successfully! You can now log in.');
+      navigate('/login');
+    } catch (err) {
+      toast.error(err || 'Failed to create account. Username or email might be taken.');
+    }
+  };
 
   return (
     <Box
@@ -89,7 +83,7 @@ const RegisterPage = () => {
         py: 4
       }}
     >
-      <Container maxWidth="xs">
+      <Container maxWidth="sm">
         <Box display="flex" flexDirection="column" alignItems="center" mb={3}>
           <Box
             sx={{
@@ -107,62 +101,52 @@ const RegisterPage = () => {
             Sign Up
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Create a new Vendra developer account
+            Create a new Vendra account
           </Typography>
         </Box>
 
         <Card sx={{ position: 'relative', overflow: 'hidden' }}>
           {loading && <LinearProgress sx={{ position: 'absolute', top: 0, left: 0, right: 0 }} />}
           <CardContent sx={{ p: 4 }}>
-            <form onSubmit={formik.handleSubmit}>
-              <Stack spacing={2}>
-                <TextField
-                  fullWidth
-                  id="username"
-                  name="username"
-                  label="Username"
-                  value={formik.values.username}
-                  onChange={formik.handleChange}
-                  error={formik.touched.username && Boolean(formik.errors.username)}
-                  helperText={formik.touched.username && formik.errors.username}
-                  disabled={loading}
-                />
-                
-                <TextField
-                  fullWidth
-                  id="email"
-                  name="email"
-                  label="Email Address"
-                  value={formik.values.email}
-                  onChange={formik.handleChange}
-                  error={formik.touched.email && Boolean(formik.errors.email)}
-                  helperText={formik.touched.email && formik.errors.email}
-                  disabled={loading}
-                />
-                
-                <PasswordField
-                  fullWidth
-                  id="password"
-                  name="password"
-                  label="Password"
-                  value={formik.values.password}
-                  onChange={formik.handleChange}
-                  error={formik.touched.password && Boolean(formik.errors.password)}
-                  helperText={formik.touched.password && formik.errors.password}
-                  disabled={loading}
-                />
+            <ToggleButtonGroup
+              color="primary"
+              exclusive
+              fullWidth
+              value={role}
+              onChange={(e, val) => val && setRole(val)}
+              sx={{ mb: 3 }}
+            >
+              <ToggleButton value="CUSTOMER">Customer</ToggleButton>
+              <ToggleButton value="VENDOR">Vendor</ToggleButton>
+            </ToggleButtonGroup>
 
-                <PasswordField
-                  fullWidth
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  label="Confirm Password"
-                  value={formik.values.confirmPassword}
-                  onChange={formik.handleChange}
-                  error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
-                  helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
-                  disabled={loading}
-                />
+            <form onSubmit={handleSubmit}>
+              <Stack spacing={2}>
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <TextField fullWidth label="First Name" value={form.firstName} onChange={update('firstName')} disabled={loading} />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField fullWidth label="Last Name" value={form.lastName} onChange={update('lastName')} disabled={loading} />
+                  </Grid>
+                </Grid>
+
+                <TextField fullWidth label="Username" value={form.username} onChange={update('username')} disabled={loading} />
+                <TextField fullWidth label="Email Address" type="email" value={form.email} onChange={update('email')} disabled={loading} />
+                <TextField fullWidth label="Password" type="password" value={form.password} onChange={update('password')} disabled={loading} />
+
+                {role === 'CUSTOMER' ? (
+                  <>
+                    <TextField fullWidth label="Shipping Address" value={form.shippingAddress} onChange={update('shippingAddress')} disabled={loading} />
+                    <TextField fullWidth label="Phone Number" value={form.phoneNumber} onChange={update('phoneNumber')} disabled={loading} />
+                  </>
+                ) : (
+                  <>
+                    <TextField fullWidth label="Business Name" value={form.businessName} onChange={update('businessName')} disabled={loading} />
+                    <TextField fullWidth label="Business Address" value={form.businessAddress} onChange={update('businessAddress')} disabled={loading} />
+                    <TextField fullWidth label="Tax ID" value={form.taxId} onChange={update('taxId')} disabled={loading} />
+                  </>
+                )}
 
                 <Button
                   color="primary"

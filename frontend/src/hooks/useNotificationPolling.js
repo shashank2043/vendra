@@ -10,7 +10,7 @@ export const useNotificationPolling = () => {
     if (!isAuthenticated || !user) return;
 
     const triggerFetch = () => {
-      dispatch(fetchNotifications({ role: user.role, userId: user.id }));
+      dispatch(fetchNotifications({ role: user.role, userId: user.username }));
     };
 
     // Immediate fetch

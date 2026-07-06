@@ -25,6 +25,10 @@ public class Inventory {
     @Column(nullable = false)
     private Integer quantity;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer reservedQuantity = 0;
+
     @Column(nullable = false)
     private String vendorId;
 

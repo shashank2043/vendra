@@ -5,7 +5,7 @@ export const fetchCommissionLedger = createAsyncThunk(
   'vendorCommission/fetchCommissionLedger',
   async (vendorId, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/commissionLedger?vendorId=${vendorId}`);
+      const response = await axiosInstance.get(`/api/v1/commission/ledger?vendorId=${vendorId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to fetch commission ledger');

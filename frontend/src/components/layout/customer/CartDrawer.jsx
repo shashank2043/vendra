@@ -17,7 +17,7 @@ const CartDrawer = ({ open, onClose }) => {
 
   useEffect(() => {
     if (open) {
-      axiosInstance.get('/vendorProfiles')
+      axiosInstance.get('/api/v1/vendors')
         .then(res => {
           const map = {};
           res.data.forEach(v => {

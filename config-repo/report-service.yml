@@ -1,0 +1,11 @@
+server:
+  port: 8092
+
+# report-service is a stateless aggregator; it pulls data from other services via
+# Feign (load-balanced through Eureka) and composes vendor/admin reports.
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

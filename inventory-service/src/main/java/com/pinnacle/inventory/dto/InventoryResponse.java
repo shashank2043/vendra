@@ -13,5 +13,7 @@ public class InventoryResponse {
     private Long id;
     private String productId;
     private Integer quantity;
+    private Integer reservedQuantity;
+    private Integer availableQuantity;
     private String vendorId;
 }

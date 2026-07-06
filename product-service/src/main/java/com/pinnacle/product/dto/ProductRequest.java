@@ -30,5 +30,9 @@ public class ProductRequest {
     @NotBlank(message = "Category is required")
     private String category;
 
+    private String imageUrl;
+
+    private Integer stock;
+
     private Map<String, Object> attributes;
 }

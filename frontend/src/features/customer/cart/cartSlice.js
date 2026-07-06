@@ -20,7 +20,7 @@ const cartSlice = createSlice({
           price: product.price,
           quantity: quantity,
           vendorId: product.vendorId,
-          imageUrl: product.imageUrls?.[0] || '',
+          imageUrl: product.imageUrl || product.imageUrls?.[0] || '',
         });
       }
     },

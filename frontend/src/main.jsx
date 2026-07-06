@@ -4,19 +4,14 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import App from './App';
 import { store, persistor } from './app/store';
 import getTheme from './theme/muiTheme';
-import { useAppSelector } from './app/hooks';
 import './index.css';
 
-// Set up Google Client ID (configurable via environment variables)
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '1036306563630-placeholder.apps.googleusercontent.com';
-
+// Light theme only (dark mode intentionally disabled per product decision).
 const ThemeWrapper = ({ children }) => {
-  const themeMode = useAppSelector((state) => state.auth.themeMode) || 'light';
-  const activeTheme = getTheme(themeMode);
+  const activeTheme = getTheme('light');
   return (
     <ThemeProvider theme={activeTheme}>
       <CssBaseline />
@@ -29,11 +24,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-          <ThemeWrapper>
-            <App />
-          </ThemeWrapper>
-        </GoogleOAuthProvider>
+        <ThemeWrapper>
+          <App />
+        </ThemeWrapper>
       </PersistGate>
     </Provider>
   </React.StrictMode>

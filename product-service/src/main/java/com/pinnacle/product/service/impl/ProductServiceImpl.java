@@ -25,7 +25,8 @@ public class ProductServiceImpl implements ProductService {
         Product product = productMapper.toEntity(request);
         product.setVendorId(vendorId);
         product.setApproved(false); // Pending moderation
-        
+        product.setModerationStatus("PENDING");
+
         Product savedProduct = productRepository.save(product);
         return productMapper.toResponse(savedProduct);
     }
@@ -41,6 +42,7 @@ public class ProductServiceImpl implements ProductService {
 
         productMapper.updateEntityFromRequest(request, product);
         product.setApproved(false); // Reset approval status after edits
+        product.setModerationStatus("PENDING");
 
         Product savedProduct = productRepository.save(product);
         return productMapper.toResponse(savedProduct);
@@ -77,6 +79,29 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public List<ProductResponse> getProducts(String vendorId, String category, Boolean approved) {
+        boolean hasCategory = category != null && !category.isBlank();
+        List<Product> products;
+        if (vendorId != null && !vendorId.isBlank()) {
+            // A specific vendor's catalogue - include unapproved items
+            products = hasCategory
+                    ? productRepository.findByVendorIdAndCategory(vendorId, category)
+                    : productRepository.findByVendorId(vendorId);
+        } else if (Boolean.FALSE.equals(approved)) {
+            // Admin moderation view - include unapproved (all products)
+            products = hasCategory
+                    ? productRepository.findByCategory(category)
+                    : productRepository.findAll();
+        } else {
+            // Storefront - approved products only
+            products = hasCategory
+                    ? productRepository.findByCategoryAndApprovedTrue(category)
+                    : productRepository.findByApprovedTrue();
+        }
+        return productMapper.toResponseList(products);
+    }
+
+    @Override
     public List<ProductResponse> getProductsByVendor(String vendorId) {
         List<Product> products = productRepository.findByVendorId(vendorId);
         return productMapper.toResponseList(products);
@@ -89,7 +114,18 @@ public class ProductServiceImpl implements ProductService {
         
         product.setApproved(approved);
         product.setModerationComment(comment);
+        product.setModerationFeedback(comment);
+        product.setModerationStatus(approved ? "APPROVED" : "REJECTED");
 
+        Product savedProduct = productRepository.save(product);
+        return productMapper.toResponse(savedProduct);
+    }
+
+    @Override
+    public ProductResponse updateStock(String id, Integer stock) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        product.setStock(stock);
         Product savedProduct = productRepository.save(product);
         return productMapper.toResponse(savedProduct);
     }

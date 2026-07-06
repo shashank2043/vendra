@@ -23,16 +23,13 @@ const ProductsPage = () => {
 
   useEffect(() => {
     if (!user) return;
-    axiosInstance.get(`/vendorProfiles?userId=${user.id}`)
-      .then(res => {
-        if (res.data && res.data.length > 0) {
-          const v = res.data[0];
-          setVendor(v);
-          dispatch(fetchVendorProducts(v.id));
-        }
-      });
+    const vendorId = user.username;
+    axiosInstance.get(`/api/v1/vendors/${vendorId}`)
+      .then(res => setVendor(res.data))
+      .catch(() => {});
+    dispatch(fetchVendorProducts(vendorId));
 
-    axiosInstance.get('/categories')
+    axiosInstance.get('/api/v1/categories')
       .then(res => {
         const map = {};
         res.data.forEach(c => {
@@ -61,8 +58,8 @@ const ProductsPage = () => {
   };
 
   const handleCreate = (data) => {
-    if (!vendor) return;
-    dispatch(createProduct({ ...data, vendorId: vendor.id }))
+    if (!user) return;
+    dispatch(createProduct({ ...data, vendorId: user.username }))
       .unwrap()
       .then(() => {
         toast.success('Product submitted for moderation!');
@@ -158,7 +155,7 @@ const ProductsPage = () => {
                   <TableCell>
                     <Box 
                       component="img"
-                      src={p.imageUrls?.[0] || 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=100&auto=format&fit=crop'}
+                      src={p.imageUrl || p.imageUrls?.[0] || 'https://placehold.co/100x100?text=No+Image'}
                       alt={p.name}
                       sx={{ width: 44, height: 44, borderRadius: 1.5, objectFit: 'cover', border: '1px solid #E5E7EB' }}
                     />
@@ -169,7 +166,7 @@ const ProductsPage = () => {
                       {p.description}
                     </Typography>
                   </TableCell>
-                  <TableCell>{categories[p.categoryId] || 'Handcrafted'}</TableCell>
+                  <TableCell>{p.category || 'Uncategorized'}</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>${p.price}</TableCell>
                   <TableCell>{p.stock}</TableCell>
                   <TableCell>

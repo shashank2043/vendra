@@ -16,6 +16,8 @@ public interface ProductMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "approved", ignore = true)
     @Mapping(target = "moderationComment", ignore = true)
+    @Mapping(target = "moderationStatus", ignore = true)
+    @Mapping(target = "moderationFeedback", ignore = true)
     @Mapping(target = "vendorId", ignore = true)
     @Mapping(target = "version", ignore = true)
     Product toEntity(ProductRequest request);
@@ -23,6 +25,8 @@ public interface ProductMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "approved", ignore = true)
     @Mapping(target = "moderationComment", ignore = true)
+    @Mapping(target = "moderationStatus", ignore = true)
+    @Mapping(target = "moderationFeedback", ignore = true)
     @Mapping(target = "vendorId", ignore = true)
     @Mapping(target = "version", ignore = true)
     void updateEntityFromRequest(ProductRequest request, @MappingTarget Product product);

@@ -5,7 +5,7 @@ export const fetchPlatformUsers = createAsyncThunk(
   'adminUsers/fetchPlatformUsers',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/platformUsers');
+      const response = await axiosInstance.get('/api/v1/admin/users');
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to fetch platform users');
@@ -17,7 +17,7 @@ export const suspendUser = createAsyncThunk(
   'adminUsers/suspendUser',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.patch(`/platformUsers/${id}`, { suspended: true });
+      const response = await axiosInstance.patch(`/api/v1/admin/users/${id}`, { suspended: true });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to suspend user');
@@ -29,7 +29,7 @@ export const reactivateUser = createAsyncThunk(
   'adminUsers/reactivateUser',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.patch(`/platformUsers/${id}`, { suspended: false });
+      const response = await axiosInstance.patch(`/api/v1/admin/users/${id}`, { suspended: false });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to reactivate user');

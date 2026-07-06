@@ -32,9 +32,12 @@
         <module>auth-service</module>
         <module>notification-service</module>
         <module>product-service</module>
+        <module>review-service</module>
         <module>order-service</module>
+        <module>payment-service</module>
         <module>inventory-service</module>
         <module>user-service</module>
+        <module>report-service</module>
     </modules>
 
     <dependencyManagement>
@@ -143,6 +146,9 @@
                     <configuration>
                         <source>${java.version}</source>
                         <target>${java.version}</target>
+                        <!-- Required so Spring MVC can read @RequestParam/@PathVariable names
+                             at runtime without explicit name= on every annotation. -->
+                        <parameters>true</parameters>
                         <annotationProcessorPaths>
                             <path>
                                 <groupId>org.projectlombok</groupId>

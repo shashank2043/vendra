@@ -16,7 +16,7 @@ const ReviewCard = ({ review, onReplySubmit }) => {
   useEffect(() => {
     let active = true;
     if (review.productId) {
-      axiosInstance.get(`/products/${review.productId}`)
+      axiosInstance.get(`/api/v1/products/${review.productId}`)
         .then(res => {
           if (active && res.data) {
             setProductName(res.data.name);
@@ -115,14 +115,11 @@ const ReviewsPage = () => {
 
   useEffect(() => {
     if (!user) return;
-    axiosInstance.get(`/vendorProfiles?userId=${user.id}`)
-      .then(res => {
-        if (res.data && res.data.length > 0) {
-          const v = res.data[0];
-          setVendor(v);
-          dispatch(fetchVendorReviews(v.id));
-        }
-      });
+    const vendorId = user.username;
+    axiosInstance.get(`/api/v1/vendors/${vendorId}`)
+      .then(res => setVendor(res.data))
+      .catch(() => {});
+    dispatch(fetchVendorReviews(vendorId));
   }, [dispatch, user]);
 
   const handleReplySubmit = async (reviewId, replyText) => {

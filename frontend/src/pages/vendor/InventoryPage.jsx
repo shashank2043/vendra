@@ -20,16 +20,13 @@ const InventoryPage = () => {
 
   useEffect(() => {
     if (!user) return;
-    axiosInstance.get(`/vendorProfiles?userId=${user.id}`)
-      .then(res => {
-        if (res.data && res.data.length > 0) {
-          const v = res.data[0];
-          setVendor(v);
-          dispatch(fetchInventory(v.id));
-        }
-      });
+    const vendorId = user.username;
+    axiosInstance.get(`/api/v1/vendors/${vendorId}`)
+      .then(res => setVendor(res.data))
+      .catch(() => {});
+    dispatch(fetchInventory(vendorId));
 
-    axiosInstance.get('/categories')
+    axiosInstance.get('/api/v1/categories')
       .then(res => {
         const map = {};
         res.data.forEach(c => {
@@ -162,7 +159,7 @@ const InventoryPage = () => {
                     <TableCell>
                       <Box 
                         component="img"
-                        src={p.imageUrls?.[0] || 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=100&auto=format&fit=crop'}
+                        src={p.imageUrl || p.imageUrls?.[0] || 'https://placehold.co/100x100?text=No+Image'}
                         alt={p.name}
                         sx={{ width: 44, height: 44, borderRadius: 1.5, objectFit: 'cover', border: '1px solid #E5E7EB' }}
                       />
@@ -173,7 +170,7 @@ const InventoryPage = () => {
                         Sku ID: {p.id}
                       </Typography>
                     </TableCell>
-                    <TableCell>{categories[p.categoryId] || 'Handcrafted'}</TableCell>
+                    <TableCell>{p.category || 'Uncategorized'}</TableCell>
                     <TableCell>
                       <Badge variant={p.moderationStatus || 'PENDING'}>
                         {p.moderationStatus || 'PENDING'}

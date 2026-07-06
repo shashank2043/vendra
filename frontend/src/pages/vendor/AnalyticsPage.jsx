@@ -19,25 +19,21 @@ const AnalyticsPage = () => {
   useEffect(() => {
     if (!user) return;
 
-    axiosInstance.get(`/vendorProfiles?userId=${user.id}`)
+    const vendorId = user.username;
+    axiosInstance.get(`/api/v1/vendors/${vendorId}`)
       .then((vendorRes) => {
-        if (vendorRes.data && vendorRes.data.length > 0) {
-          const v = vendorRes.data[0];
-          setVendor(v);
-
-          return Promise.all([
-            axiosInstance.get(`/orders?vendorId=${v.id}`),
-            axiosInstance.get(`/analytics?vendorId=${v.id}`)
-          ]);
-        }
-        return null;
+        setVendor(vendorRes.data);
+        return Promise.all([
+          axiosInstance.get(`/api/v1/orders?vendorId=${vendorId}`),
+          axiosInstance.get(`/api/v1/analytics?vendorId=${vendorId}`)
+        ]);
       })
       .then((results) => {
         if (!results) return;
         const [ordersRes, analyticsRes] = results;
 
         const orders = ordersRes.data;
-        const analytics = analyticsRes.data?.[0];
+        const analytics = Array.isArray(analyticsRes.data) ? analyticsRes.data[0] : analyticsRes.data;
 
         // 1. Line Chart Data (Sales Over Time)
         setRevenueData(analytics?.salesOverTime || []);

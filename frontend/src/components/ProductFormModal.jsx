@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 const ProductFormModal = ({ open, onClose, onSave, product }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [categoryId, setCategoryId] = useState('');
+  const [category, setCategory] = useState('');
   const [price, setPrice] = useState('');
   const [stock, setStock] = useState('');
   const [imageUrls, setImageUrls] = useState('');
@@ -14,7 +14,7 @@ const ProductFormModal = ({ open, onClose, onSave, product }) => {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    axiosInstance.get('/categories')
+    axiosInstance.get('/api/v1/categories')
       .then(res => setCategories(res.data))
       .catch(err => console.error('Error fetching categories in modal:', err));
   }, []);
@@ -23,15 +23,15 @@ const ProductFormModal = ({ open, onClose, onSave, product }) => {
     if (product) {
       setName(product.name || '');
       setDescription(product.description || '');
-      setCategoryId(product.categoryId || '');
+      setCategory(product.category || '');
       setPrice(product.price || '');
       setStock(product.stock || '');
-      setImageUrls(product.imageUrls?.join(', ') || '');
-      setTags(product.tags?.join(', ') || '');
+      setImageUrls(product.imageUrl || '');
+      setTags(product.attributes?.tags?.join(', ') || '');
     } else {
       setName('');
       setDescription('');
-      setCategoryId('');
+      setCategory('');
       setPrice('');
       setStock('');
       setImageUrls('');
@@ -41,19 +41,20 @@ const ProductFormModal = ({ open, onClose, onSave, product }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!name || !price || !categoryId || !stock) {
+    if (!name || !price || !category || !stock) {
       toast.error('Please fill in all required fields.');
       return;
     }
 
+    const tagList = tags.split(',').map(tag => tag.trim()).filter(Boolean);
     const payload = {
       name,
       description,
-      categoryId,
+      category, // backend expects `category` (non-blank), stores the category name
       price: parseFloat(price),
       stock: parseInt(stock),
-      imageUrls: imageUrls.split(',').map(url => url.trim()).filter(Boolean),
-      tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
+      imageUrl: imageUrls.split(',').map(url => url.trim()).filter(Boolean)[0] || '',
+      attributes: tagList.length ? { tags: tagList } : undefined,
     };
 
     onSave(payload);
@@ -93,12 +94,12 @@ const ProductFormModal = ({ open, onClose, onSave, product }) => {
             <InputLabel id="category-select-label">Category</InputLabel>
             <Select
               labelId="category-select-label"
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
               label="Category"
             >
               {categories.map((cat) => (
-                <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
+                <MenuItem key={cat.id} value={cat.name}>{cat.name}</MenuItem>
               ))}
             </Select>
           </FormControl>

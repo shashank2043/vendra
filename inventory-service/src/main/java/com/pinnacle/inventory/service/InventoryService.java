@@ -9,5 +9,5 @@ public interface InventoryService {
     InventoryResponse updateStock(InventoryRequest request, String vendorId);
     InventoryResponse getStockByProductId(String productId);
     List<InventoryResponse> getStockByVendor(String vendorId);
-    boolean reserveStock(String productId, int quantity);
+    boolean reserveStock(String orderId, String productId, int quantity);
 }

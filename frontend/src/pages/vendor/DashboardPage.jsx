@@ -22,22 +22,18 @@ const DashboardPage = () => {
   useEffect(() => {
     if (!user) return;
 
-    // Resolve vendor profile
-    axiosInstance.get(`/vendorProfiles?userId=${user.id}`)
+    // Resolve vendor profile (the username is the cross-service vendorId)
+    const vendorId = user.username;
+    axiosInstance.get(`/api/v1/vendors/${vendorId}`)
       .then((vendorRes) => {
-        if (vendorRes.data && vendorRes.data.length > 0) {
-          const v = vendorRes.data[0];
-          setVendor(v);
-
-          // Fetch dependencies in parallel
-          return Promise.all([
-            axiosInstance.get(`/orders?vendorId=${v.id}`),
-            axiosInstance.get(`/products?vendorId=${v.id}`),
-            axiosInstance.get(`/trustScores?vendorId=${v.id}`),
-            axiosInstance.get(`/analytics?vendorId=${v.id}`)
-          ]);
-        }
-        return null;
+        setVendor(vendorRes.data);
+        // Fetch dependencies in parallel
+        return Promise.all([
+          axiosInstance.get(`/api/v1/orders?vendorId=${vendorId}`),
+          axiosInstance.get(`/api/v1/products?vendorId=${vendorId}`),
+          axiosInstance.get(`/api/v1/trust-scores?vendorId=${vendorId}`),
+          axiosInstance.get(`/api/v1/analytics?vendorId=${vendorId}`)
+        ]);
       })
       .then((results) => {
         if (!results) return;
@@ -59,12 +55,15 @@ const DashboardPage = () => {
           .filter(p => p.stock < 5)
           .length;
 
-        const trustScore = trustRes.data?.[0]?.score || 100;
+        const trustData = Array.isArray(trustRes.data) ? trustRes.data[0] : trustRes.data;
+        const trustScore = trustData?.score || 100;
+
+        const analyticsData = Array.isArray(analyticsRes.data) ? analyticsRes.data[0] : analyticsRes.data;
 
         setStats({ totalSales, pendingOrders, lowStockAlerts, trustScore });
         // Take last 5 orders sorted newest first
         setRecentOrders(orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5));
-        setSalesData(analyticsRes.data?.[0]?.salesOverTime || []);
+        setSalesData(analyticsData?.salesOverTime || []);
       })
       .catch((err) => console.error('Error loading dashboard data:', err))
       .finally(() => setLoading(false));
@@ -214,7 +213,7 @@ const DashboardPage = () => {
                 ) : (
                   recentOrders.map((order) => (
                     <TableRow key={order.id} hover>
-                      <TableCell sx={{ fontFamily: 'monospace' }}>#{order.id.slice(0, 14)}...</TableCell>
+                      <TableCell sx={{ fontFamily: 'monospace' }}>#{String(order.id).slice(0, 14)}</TableCell>
                       <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>{order.userName}</TableCell>
                       <TableCell><Badge variant={order.status}>{order.status}</Badge></TableCell>

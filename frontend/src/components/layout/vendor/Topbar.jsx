@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppBar, Toolbar, IconButton, Typography, Box, Avatar, Menu, MenuItem } from '@mui/material';
-import { Menu as MenuIcon, LogOut, User, Sun, Moon } from 'lucide-react';
+import { Menu as MenuIcon, LogOut, User } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../../app/hooks';
-import { logout, toggleThemeMode } from '../../../features/auth/authSlice';
+import { logout } from '../../../features/auth/authSlice';
 import NotificationBell from '../../../features/notifications/components/NotificationBell';
 import NotificationDropdown from '../../../features/notifications/components/NotificationDropdown';
 
@@ -12,7 +12,6 @@ const Topbar = ({ onMenuClick }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const themeMode = useAppSelector((state) => state.auth.themeMode) || 'light';
 
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
   const [notifAnchorEl, setNotifAnchorEl] = useState(null);
@@ -65,11 +64,6 @@ const Topbar = ({ onMenuClick }) => {
 
           {/* Right menu icons */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {/* Theme Switcher */}
-            <IconButton color="inherit" onClick={() => dispatch(toggleThemeMode())} sx={{ mr: 0.5 }}>
-              {themeMode === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-            </IconButton>
-
             {/* Shared Notification Bell */}
             <NotificationBell onClick={handleNotifOpen} />
 

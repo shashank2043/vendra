@@ -8,6 +8,7 @@ const ProductFilters = ({
   onCategoryChange,
   priceRange,
   onPriceRangeChange,
+  maxPrice = 300,
   minRating,
   onMinRatingChange,
   onClear
@@ -41,8 +42,8 @@ const ProductFilters = ({
               control={
                 <Checkbox
                   size="small"
-                  checked={selectedCategories.includes(cat.id)}
-                  onChange={() => onCategoryChange(cat.id)}
+                  checked={selectedCategories.includes(cat.name)}
+                  onChange={() => onCategoryChange(cat.name)}
                   color="primary"
                 />
               }
@@ -63,7 +64,7 @@ const ProductFilters = ({
           onChange={(e, newValue) => onPriceRangeChange(newValue)}
           valueLabelDisplay="auto"
           min={0}
-          max={300}
+          max={maxPrice}
           color="primary"
           sx={{ width: '90%', ml: 1 }}
         />

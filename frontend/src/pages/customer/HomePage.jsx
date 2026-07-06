@@ -21,8 +21,8 @@ const HomePage = () => {
     dispatch(fetchProducts());
     
     Promise.all([
-      axiosInstance.get('/categories'),
-      axiosInstance.get('/vendorProfiles?approvalStatus=APPROVED')
+      axiosInstance.get('/api/v1/categories'),
+      axiosInstance.get('/api/v1/vendors?approvalStatus=APPROVED')
     ]).then(([catRes, vendorRes]) => {
       setCategories(catRes.data);
       setVendors(vendorRes.data);
@@ -113,7 +113,7 @@ const HomePage = () => {
               {categories.map((cat) => (
                 <Grid item xs={6} sm={3} key={cat.id}>
                   <Card
-                    onClick={() => handleCategoryClick(cat.id)}
+                    onClick={() => handleCategoryClick(cat.name)}
                     sx={{
                       cursor: 'pointer',
                       borderRadius: 3,
@@ -129,8 +129,15 @@ const HomePage = () => {
                   >
                     <Box
                       component="img"
-                      src={cat.imageUrl}
+                      src={cat.imageUrl || `https://picsum.photos/seed/${encodeURIComponent(cat.name)}/600/450`}
                       alt={cat.name}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src =
+                          `data:image/svg+xml,${encodeURIComponent(
+                            '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="450"><rect width="100%" height="100%" fill="#C2A26F"/></svg>'
+                          )}`;
+                      }}
                       sx={{
                         position: 'absolute',
                         top: 0,

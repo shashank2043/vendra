@@ -3,6 +3,7 @@ package com.pinnacle.product.controller;
 import com.pinnacle.product.dto.ApiResponse;
 import com.pinnacle.product.dto.ProductRequest;
 import com.pinnacle.product.dto.ProductResponse;
+import com.pinnacle.product.dto.StockUpdateRequest;
 import com.pinnacle.product.exception.BadRequestException;
 import com.pinnacle.product.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -74,11 +75,22 @@ public class ProductController {
     }
 
     @GetMapping
-    @Operation(summary = "List all approved products (with optional category filter)")
-    public ResponseEntity<ApiResponse<List<ProductResponse>>> getAllApprovedProducts(
-            @RequestParam(required = false) String category) {
-        List<ProductResponse> response = productService.getAllApprovedProducts(category);
-        return ResponseEntity.ok(ApiResponse.success(response, "Approved products retrieved successfully"));
+    @Operation(summary = "List products with optional vendorId, category and approved filters")
+    public ResponseEntity<ApiResponse<List<ProductResponse>>> getProducts(
+            @RequestParam(required = false) String vendorId,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Boolean approved) {
+        List<ProductResponse> response = productService.getProducts(vendorId, category, approved);
+        return ResponseEntity.ok(ApiResponse.success(response, "Products retrieved successfully"));
+    }
+
+    @PatchMapping("/{id}/stock")
+    @Operation(summary = "Internal: update denormalized product stock (service-to-service)")
+    public ResponseEntity<ApiResponse<ProductResponse>> updateStock(
+            @PathVariable("id") String id,
+            @RequestBody StockUpdateRequest request) {
+        ProductResponse response = productService.updateStock(id, request.getStock());
+        return ResponseEntity.ok(ApiResponse.success(response, "Product stock updated successfully"));
     }
 
     @GetMapping("/my-products")

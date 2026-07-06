@@ -5,7 +5,7 @@ export const fetchVendorApplications = createAsyncThunk(
   'adminVendors/fetchVendorApplications',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/vendorProfiles');
+      const response = await axiosInstance.get('/api/v1/vendors');
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to fetch vendor applications');
@@ -17,7 +17,7 @@ export const approveVendor = createAsyncThunk(
   'adminVendors/approveVendor',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.patch(`/vendorProfiles/${id}`, { approvalStatus: 'APPROVED' });
+      const response = await axiosInstance.put(`/api/v1/vendors/${id}/approve`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to approve vendor');
@@ -29,10 +29,7 @@ export const rejectVendor = createAsyncThunk(
   'adminVendors/rejectVendor',
   async ({ id, reason }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.patch(`/vendorProfiles/${id}`, { 
-        approvalStatus: 'REJECTED',
-        rejectionReason: reason 
-      });
+      const response = await axiosInstance.put(`/api/v1/vendors/${id}/reject`, { reason });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to reject vendor');

@@ -33,6 +33,12 @@ const ProductDetailPage = () => {
   const [userComment, setUserComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
 
+  // Overall rating is the average of this product's reviews (the product record
+  // itself does not store an aggregate rating).
+  const averageRating = reviews.length
+    ? reviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / reviews.length
+    : 0;
+
   useEffect(() => {
     dispatch(fetchProductById(id));
     dispatch(fetchReviewsByProduct(id));
@@ -45,29 +51,24 @@ const ProductDetailPage = () => {
   // Sync active image when product loads
   useEffect(() => {
     if (product) {
-      setActiveImage(product.imageUrls?.[0] || '');
+      setActiveImage(product.imageUrl || product.imageUrls?.[0] || 'https://placehold.co/600x600?text=No+Image');
       
       // Fetch vendor details
-      axiosInstance.get(`/vendorProfiles/${product.vendorId}`)
-        .then(res => setVendor(res.data))
-        .catch(() => {
-          axiosInstance.get(`/vendorProfiles?id=${product.vendorId}`)
-            .then(res => {
-              if (res.data && res.data.length > 0) {
-                setVendor(res.data[0]);
-              }
-            });
-        });
+      if (product.vendorId) {
+        axiosInstance.get(`/api/v1/vendors/${product.vendorId}`)
+          .then(res => setVendor(res.data))
+          .catch(() => {});
+      }
     }
   }, [product]);
 
   // Check eligibility to review
   useEffect(() => {
     if (isAuthenticated && user && product) {
-      axiosInstance.get(`/orders?userId=${user.id}&status=DELIVERED`)
+      axiosInstance.get(`/api/v1/orders?userId=${user.username}&status=DELIVERED`)
         .then((res) => {
-          const hasPurchased = res.data.some(order => 
-            order.items.some(item => item.productId === product.id)
+          const hasPurchased = (res.data || []).some(order =>
+            (order.items || []).some(item => item.productId === product.id)
           );
           setEligibleToReview(hasPurchased);
         })
@@ -102,13 +103,10 @@ const ProductDetailPage = () => {
 
     setSubmittingReview(true);
     const reviewData = {
-      id: `rev-${Date.now()}`,
       productId: product.id,
-      userId: user.id,
-      userName: user.name || 'Anonymous User',
+      vendorId: product.vendorId,
       rating: userRating,
       comment: userComment.trim(),
-      createdAt: new Date().toISOString()
     };
 
     try {
@@ -209,9 +207,9 @@ const ProductDetailPage = () => {
 
             {/* Rating summary */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
-              <Rating value={product.rating} readOnly precision={0.1} sx={{ color: '#C2A26F' }} />
+              <Rating value={averageRating} readOnly precision={0.1} sx={{ color: '#C2A26F' }} />
               <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                {product.rating} ({reviews.length} customer reviews)
+                {averageRating.toFixed(1)} ({reviews.length} customer reviews)
               </Typography>
             </Box>
 

@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,8 +26,9 @@ public class Order {
     @Column(nullable = false)
     private String customerName;
 
+    // PLACED, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED, FAILED
     @Column(nullable = false)
-    private String status; // PENDING, CONFIRMED, CANCELLED, FAILED
+    private String status;
 
     @Column(nullable = false)
     private BigDecimal totalAmount;
@@ -37,6 +39,32 @@ public class Order {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    // Extended fields (frontend depends on these names)
+    private String userId;
+
+    private String userName;
+
+    private String vendorId;
+
+    private String parentOrderId;
+
+    @Column(length = 1000)
+    private String shippingAddress;
+
+    private String paymentMethod;
+
+    // STANDARD / PREMIUM / VIP
+    @Builder.Default
+    private String priority = "STANDARD";
+
+    private Long deliveryPartnerId;
+
+    private String deliveryPartnerName;
+
+    private Instant estimatedDeliveryAt;
+
+    private String trackingStatus;
 
     @Version
     private Long version;

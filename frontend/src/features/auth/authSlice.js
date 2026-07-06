@@ -2,204 +2,216 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { jwtDecode } from 'jwt-decode';
 import axiosInstance from '../../api/axiosInstance';
 
-export const loginWithGoogle = createAsyncThunk(
-  'auth/loginWithGoogle',
-  async (credential, { rejectWithValue }) => {
+// Map the Keycloak realm roles to a single primary app role.
+const ROLE_PRECEDENCE = ['ADMIN', 'VENDOR', 'CUSTOMER'];
+
+const derivePrimaryRole = (realmRoles = []) => {
+  const normalized = realmRoles
+    .map((r) => String(r).replace(/^ROLE_/, '').toUpperCase())
+    .filter((r) => ROLE_PRECEDENCE.includes(r));
+  for (const role of ROLE_PRECEDENCE) {
+    if (normalized.includes(role)) return role;
+  }
+  return 'CUSTOMER';
+};
+
+const decodeToken = (accessToken) => {
+  try {
+    return jwtDecode(accessToken);
+  } catch {
+    return {};
+  }
+};
+
+// Best-effort profile enrichment. Never throws — falls back to JWT claims.
+// The access token is passed explicitly because it isn't persisted yet at login time.
+const enrichProfile = async (decoded, role, accessToken) => {
+  const jwtId = decoded.sub || decoded.preferred_username;
+  const fallback = {
+    id: jwtId,
+    username: decoded.preferred_username || decoded.sub,
+    email: decoded.email,
+    approvalStatus: role === 'VENDOR' ? 'PENDING' : 'APPROVED',
+  };
+
+  const endpoints = ['/auth/profile', '/api/v1/users/profile'];
+  const authHeader = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+  for (const url of endpoints) {
     try {
-      const decoded = jwtDecode(credential);
-      const { email, name, picture } = decoded;
-
-      let role = 'CUSTOMER';
-      let dbUser = null;
-      let approvalStatus = 'APPROVED';
-
-      try {
-        const response = await axiosInstance.get(`/platformUsers?email=${encodeURIComponent(email)}`);
-        if (response.data && response.data.length > 0) {
-          dbUser = response.data[0];
-          role = dbUser.role;
-        } else {
-          // Auto-register new users as CUSTOMER
-          const newUser = {
-            id: `user-${Date.now()}`,
-            email,
-            name,
-            role: 'CUSTOMER',
-            picture,
-            suspended: false
-          };
-          const createResponse = await axiosInstance.post('/platformUsers', newUser);
-          dbUser = createResponse.data;
-          role = 'CUSTOMER';
-        }
-
-        if (role === 'VENDOR') {
-          const profileResponse = await axiosInstance.get(`/vendorProfiles?userId=${dbUser.id}`);
-          if (profileResponse.data && profileResponse.data.length > 0) {
-            approvalStatus = profileResponse.data[0].approvalStatus;
-          } else {
-            // Auto-create a pending vendor profile
-            const newProfile = {
-              id: `vp-${Date.now()}`,
-              userId: dbUser.id,
-              businessName: `${name}'s Store`,
-              approvalStatus: 'PENDING',
-              createdAt: new Date().toISOString()
-            };
-            await axiosInstance.post('/vendorProfiles', newProfile);
-            approvalStatus = 'PENDING';
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching/creating user in mock db:', err);
-        dbUser = { id: `user-temp-${Date.now()}`, email, name, picture, role, suspended: false };
+      const res = await axiosInstance.get(url, { headers: authHeader });
+      const profile = res.data;
+      if (profile && typeof profile === 'object') {
+        return {
+          ...fallback,
+          ...profile,
+          id: profile.id || fallback.id,
+          approvalStatus:
+            role === 'VENDOR'
+              ? profile.approvalStatus || 'PENDING'
+              : profile.approvalStatus || 'APPROVED',
+        };
       }
+    } catch {
+      // try next endpoint / fall through to fallback
+    }
+  }
+  return fallback;
+};
 
-      if (dbUser.suspended) {
-        return rejectWithValue('This account has been suspended by the platform administrator.');
-      }
+export const login = createAsyncThunk(
+  'auth/login',
+  async ({ username, password }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/auth/login', { username, password });
+      const { accessToken, refreshToken, user: apiUser } = response.data;
 
-      return {
-        user: { ...dbUser, name, email, picture, approvalStatus },
-        token: credential,
+      const decoded = decodeToken(accessToken);
+      const realmRoles = decoded?.realm_access?.roles || [];
+      const role = derivePrimaryRole(realmRoles.length ? realmRoles : apiUser?.roles || []);
+
+      const enriched = await enrichProfile(decoded, role, accessToken);
+
+      const user = {
+        ...(apiUser || {}),
+        ...enriched,
+        id: enriched.id || apiUser?.id || decoded.sub,
+        username: apiUser?.username || enriched.username,
+        email: apiUser?.email || enriched.email,
         role,
       };
+
+      return { accessToken, refreshToken, user, role };
     } catch (error) {
-      return rejectWithValue(error.message || 'Failed to decode Google credentials');
+      return rejectWithValue(
+        error.response?.data?.message || error.message || 'Login failed'
+      );
+    }
+  }
+);
+
+export const registerCustomer = createAsyncThunk(
+  'auth/registerCustomer',
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/auth/register/customer', data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message || 'Registration failed'
+      );
+    }
+  }
+);
+
+export const registerVendor = createAsyncThunk(
+  'auth/registerVendor',
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/auth/register/vendor', data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message || 'Registration failed'
+      );
+    }
+  }
+);
+
+export const refresh = createAsyncThunk(
+  'auth/refresh',
+  async (refreshToken, { getState, rejectWithValue }) => {
+    try {
+      const token = refreshToken || getState().auth.refreshToken;
+      const response = await axiosInstance.post('/auth/refresh', { refreshToken: token });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message || 'Session refresh failed'
+      );
     }
   }
 );
 
 const initialState = {
   user: null,
-  token: null,
+  accessToken: null,
+  refreshToken: null,
   role: null,
   isAuthenticated: false,
   loading: false,
   error: null,
-  themeMode: 'light', // Persisted theme mode
 };
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    loginAsGuest: (state) => {
-      state.user = {
-        id: 'guest-customer-1',
-        name: 'Guest Customer',
-        email: 'guest@vendra.com',
-        role: 'CUSTOMER',
-        picture: '',
-        approvalStatus: 'APPROVED'
-      };
-      state.token = 'guest-token';
-      state.role = 'CUSTOMER';
-      state.isAuthenticated = true;
-      state.loading = false;
-      state.error = null;
-    },
-    loginAsDemoUser: (state, action) => {
-      const demoRole = action.payload; // 'CUSTOMER' | 'VENDOR_APPROVED' | 'VENDOR_PENDING' | 'ADMIN'
-      
-      let userDetails = {};
-      let role = 'CUSTOMER';
-
-      if (demoRole === 'ADMIN') {
-        role = 'ADMIN';
-        userDetails = {
-          id: 'user-admin-1',
-          name: 'Platform Admin',
-          email: 'admin@example.com',
-          role: 'ADMIN',
-          picture: '',
-          approvalStatus: 'APPROVED'
-        };
-      } else if (demoRole === 'VENDOR_APPROVED') {
-        role = 'VENDOR';
-        userDetails = {
-          id: 'user-vendor-1',
-          name: 'Aura Home Seller',
-          email: 'vendor@example.com',
-          role: 'VENDOR',
-          picture: '',
-          approvalStatus: 'APPROVED'
-        };
-      } else if (demoRole === 'VENDOR_PENDING') {
-        role = 'VENDOR';
-        userDetails = {
-          id: 'user-vendor-2',
-          name: 'Pending Seller',
-          email: 'pending_vendor@example.com',
-          role: 'VENDOR',
-          picture: '',
-          approvalStatus: 'PENDING'
-        };
-      } else {
-        role = 'CUSTOMER';
-        userDetails = {
-          id: 'user-customer-1',
-          name: 'John Customer',
-          email: 'customer@example.com',
-          role: 'CUSTOMER',
-          picture: '',
-          approvalStatus: 'APPROVED'
-        };
-      }
-
-      state.user = userDetails;
-      state.token = `demo-token-${role}`;
-      state.role = role;
-      state.isAuthenticated = true;
-      state.loading = false;
-      state.error = null;
-    },
-    loginSuccess: (state, action) => {
-      const user = action.payload;
-      state.user = user;
-      state.role = user.role;
-      state.token = `email-token-${user.id}`;
-      state.isAuthenticated = true;
-      state.loading = false;
-      state.error = null;
-    },
     logout: (state) => {
       state.user = null;
-      state.token = null;
+      state.accessToken = null;
+      state.refreshToken = null;
       state.role = null;
       state.isAuthenticated = false;
       state.loading = false;
       state.error = null;
     },
     updateApprovalStatus: (state, action) => {
-      if (state.user && state.user.role === 'VENDOR') {
+      if (state.user && state.role === 'VENDOR') {
         state.user.approvalStatus = action.payload;
       }
     },
-    toggleThemeMode: (state) => {
-      state.themeMode = state.themeMode === 'light' ? 'dark' : 'light';
-    }
   },
   extraReducers: (builder) => {
     builder
-      .addCase(loginWithGoogle.pending, (state) => {
+      .addCase(login.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(loginWithGoogle.fulfilled, (state, action) => {
+      .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
-        state.isAuthenticated = true;
         state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.accessToken = action.payload.accessToken;
+        state.refreshToken = action.payload.refreshToken;
         state.role = action.payload.role;
+        state.isAuthenticated = true;
         state.error = null;
       })
-      .addCase(loginWithGoogle.rejected, (state, action) => {
+      .addCase(login.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || 'Authentication failed';
+        state.error = action.payload || 'Login failed';
+      })
+      .addCase(registerCustomer.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(registerCustomer.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(registerCustomer.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || 'Registration failed';
+      })
+      .addCase(registerVendor.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(registerVendor.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(registerVendor.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || 'Registration failed';
+      })
+      .addCase(refresh.fulfilled, (state, action) => {
+        if (action.payload?.accessToken) {
+          state.accessToken = action.payload.accessToken;
+        }
+        if (action.payload?.refreshToken) {
+          state.refreshToken = action.payload.refreshToken;
+        }
       });
   },
 });
 
-export const { loginAsGuest, loginAsDemoUser, logout, updateApprovalStatus, toggleThemeMode, loginSuccess } = authSlice.actions;
+export const { logout, updateApprovalStatus } = authSlice.actions;
 export default authSlice.reducer;

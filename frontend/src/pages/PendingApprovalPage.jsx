@@ -22,9 +22,9 @@ const PendingApprovalPage = () => {
     if (!user) return;
     setChecking(true);
     try {
-      const response = await axiosInstance.get(`/vendorProfiles?userId=${user.id}`);
-      if (response.data && response.data.length > 0) {
-        const profile = response.data[0];
+      const response = await axiosInstance.get(`/api/v1/vendors/${user.username}`);
+      const profile = response.data;
+      if (profile && profile.approvalStatus) {
         if (profile.approvalStatus === 'APPROVED') {
           dispatch(updateApprovalStatus('APPROVED'));
           toast.success('Your vendor account has been approved! Redirecting...');
