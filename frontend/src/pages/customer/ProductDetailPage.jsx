@@ -7,6 +7,7 @@ import { fetchProductById, clearSelectedProduct } from '../../features/customer/
 import { toggleWishlist } from '../../features/customer/wishlist/wishlistSlice';
 import { addToCart } from '../../features/customer/cart/cartSlice';
 import { fetchReviewsByProduct, submitReview } from '../../features/customer/reviews/reviewSlice';
+import { formatMoney, selectCurrency } from '../../features/currency/currencySlice';
 import axiosInstance from '../../api/axiosInstance';
 import Spinner from '../../components/common/Spinner';
 import { toast } from 'react-toastify';
@@ -20,6 +21,7 @@ const ProductDetailPage = () => {
   const { reviews } = useAppSelector((state) => state.reviews);
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const wishlist = useAppSelector((state) => state.wishlist.productIds);
+  const currency = useAppSelector(selectCurrency);
   const isWishlisted = wishlist.includes(id);
 
   const [activeImage, setActiveImage] = useState('');
@@ -215,7 +217,7 @@ const ProductDetailPage = () => {
 
             {/* Price */}
             <Typography variant="h3" fontWeight={800} color="primary.main" sx={{ mb: 3 }}>
-              ${product.price}
+              {formatMoney(product.price, currency)}
             </Typography>
 
             <Divider sx={{ mb: 3 }} />

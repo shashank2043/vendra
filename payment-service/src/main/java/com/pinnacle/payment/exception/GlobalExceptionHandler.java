@@ -4,6 +4,7 @@ import com.pinnacle.payment.dto.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -41,6 +42,16 @@ public class GlobalExceptionHandler {
 
         ApiResponse<Void> response = ApiResponse.error("Validation failed", errors, request.getRequestURI());
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ApiResponse<Void>> handleOptimisticLocking(OptimisticLockingFailureException ex, HttpServletRequest request) {
+        log.warn("Concurrent payment update conflict: {}", ex.getMessage());
+        ApiResponse<Void> response = ApiResponse.error(
+                "This payment was updated concurrently; please retry.",
+                List.of(ex.getMessage()),
+                request.getRequestURI());
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(Exception.class)

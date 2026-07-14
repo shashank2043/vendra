@@ -12,6 +12,8 @@ import {
 import storage from 'redux-persist/lib/storage';
 import authReducer from '../features/auth/authSlice';
 import notificationReducer from '../features/notifications/notificationSlice';
+import currencyReducer from '../features/currency/currencySlice';
+import themeReducer from '../features/theme/themeSlice';
 
 // Customer Slices
 import productsReducer from '../features/customer/products/productSlice';
@@ -43,13 +45,15 @@ const persistConfig = {
   key: 'root',
   version: 1,
   storage,
-  whitelist: ['auth', 'cart', 'wishlist'], // Slices to persist
+  whitelist: ['auth', 'cart', 'wishlist', 'currency', 'theme'], // Slices to persist
 };
 
 const rootReducer = combineReducers({
   auth: authReducer,
   notifications: notificationReducer,
-  
+  currency: currencyReducer,
+  theme: themeReducer,
+
   // Customer Portal
   products: productsReducer,
   cart: cartReducer,

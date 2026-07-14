@@ -4,6 +4,7 @@ import { X, ShoppingBag, Trash2, Plus, Minus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../app/hooks';
 import { selectCartItems, selectCartTotal, removeFromCart, updateQuantity } from '../../../features/customer/cart/cartSlice';
+import { formatMoney, selectCurrency } from '../../../features/currency/currencySlice';
 import axiosInstance from '../../../api/axiosInstance';
 import EmptyState from '../../common/EmptyState';
 
@@ -12,6 +13,7 @@ const CartDrawer = ({ open, onClose }) => {
   const dispatch = useAppDispatch();
   const cartItems = useAppSelector(selectCartItems);
   const cartTotal = useAppSelector(selectCartTotal);
+  const currency = useAppSelector(selectCurrency);
 
   const [vendorNames, setVendorNames] = useState({});
 
@@ -116,7 +118,7 @@ const CartDrawer = ({ open, onClose }) => {
                           {item.name}
                         </Typography>
                         <Typography variant="body2" color="primary.main" fontWeight={700} sx={{ mb: 1 }}>
-                          ${item.price}
+                          {formatMoney(item.price, currency)}
                         </Typography>
 
                         {/* Quantity Controls */}
@@ -165,7 +167,7 @@ const CartDrawer = ({ open, onClose }) => {
         <Box sx={{ p: 3, borderTop: '1px solid', borderColor: 'divider', backgroundColor: 'background.paper' }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
             <Typography variant="body1" fontWeight={600}>Subtotal</Typography>
-            <Typography variant="h6" fontWeight={700} color="primary.main">${cartTotal}</Typography>
+            <Typography variant="h6" fontWeight={700} color="primary.main">{formatMoney(cartTotal, currency)}</Typography>
           </Box>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
             Shipping and taxes calculated at checkout.

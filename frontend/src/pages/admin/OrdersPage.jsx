@@ -3,6 +3,7 @@ import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead
 import { Search, ShoppingBag } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { fetchAllOrders } from '../../features/admin/orders/orderSlice';
+import { formatMoney, selectCurrency } from '../../features/currency/currencySlice';
 import axiosInstance from '../../api/axiosInstance';
 import Badge from '../../components/common/Badge';
 import EmptyState from '../../components/common/EmptyState';
@@ -10,6 +11,7 @@ import EmptyState from '../../components/common/EmptyState';
 const OrdersPage = () => {
   const dispatch = useAppDispatch();
   const { orders, loading } = useAppSelector((state) => state.adminOrders);
+  const currency = useAppSelector(selectCurrency);
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -151,7 +153,7 @@ const OrdersPage = () => {
                       {order.status}
                     </Badge>
                   </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 700 }}>${order.total}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>{formatMoney(order.total, currency)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -182,12 +184,9 @@ const OrdersPage = () => {
                   <Typography variant="subtitle2" fontWeight={750} color="secondary.dark" sx={{ mb: 1, textTransform: 'uppercase' }}>
                     Shipping Coordinates
                   </Typography>
-                  <Typography variant="body2" fontWeight={700}>{selectedOrder.shippingAddress?.fullName}</Typography>
-                  <Typography variant="body2" color="text.secondary">{selectedOrder.shippingAddress?.addressLine1}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {selectedOrder.shippingAddress?.city}, {selectedOrder.shippingAddress?.postalCode}
+                  <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>
+                    {selectedOrder.shippingAddress || 'No delivery address on file.'}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">{selectedOrder.shippingAddress?.country}</Typography>
                 </Grid>
 
                 <Grid item xs={12} sm={6}>
@@ -199,9 +198,9 @@ const OrdersPage = () => {
                     <Typography variant="body2" fontWeight={700}>{selectedOrder.paymentMethod || 'Razorpay sandbox'}</Typography>
                   </Stack>
                   <Stack direction="row" justifyContent="space-between">
-                    <Typography variant="body2" color="text.secondary">Platform Charge:</Typography>
-                    <Typography variant="body2" fontWeight={700} color="success.main">
-                      ${(selectedOrder.total * 0.15).toFixed(2)} (15%)
+                    <Typography variant="body2" color="text.secondary">Order Total:</Typography>
+                    <Typography variant="body2" fontWeight={700}>
+                      {formatMoney(selectedOrder.total, currency)}
                     </Typography>
                   </Stack>
                 </Grid>
@@ -232,11 +231,11 @@ const OrdersPage = () => {
                             />
                             <Box>
                               <Typography variant="body2" fontWeight={700}>{item.name}</Typography>
-                              <Typography variant="caption" color="text.secondary">Qty: {item.quantity} &bull; ${item.price} each</Typography>
+                              <Typography variant="caption" color="text.secondary">Qty: {item.quantity} &bull; {formatMoney(item.price, currency)} each</Typography>
                             </Box>
                           </Box>
                           <Typography variant="body2" fontWeight={700}>
-                            ${item.price * item.quantity}
+                            {formatMoney(item.price * item.quantity, currency)}
                           </Typography>
                         </Box>
                       ))}

@@ -30,12 +30,10 @@ public class VendorRegisterRequest {
     @NotBlank(message = "Business name is required")
     private String businessName;
 
-    @NotBlank(message = "Business address is required")
+    // Optional at signup; completed later on the vendor profile page.
     private String businessAddress;
 
-    @NotBlank(message = "Tax ID is required")
     private String taxId;
 
-    @NotBlank(message = "Phone number is required")
     private String phoneNumber;
 }

@@ -9,6 +9,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -24,7 +25,8 @@ public class Product {
     private BigDecimal price;
     private String vendorId;
     private String category;
-    private String imageUrl;
+    private String imageUrl;        // primary image (first of imageUrls) for list/cart thumbnails
+    private List<String> imageUrls; // full gallery of images (URLs and/or data URIs)
     private Integer stock;
     private Map<String, Object> attributes;
     private boolean approved;

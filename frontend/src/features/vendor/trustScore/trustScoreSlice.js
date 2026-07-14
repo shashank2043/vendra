@@ -7,10 +7,11 @@ export const fetchTrustScore = createAsyncThunk(
     try {
       const response = await axiosInstance.get(`/api/v1/trust-scores?vendorId=${vendorId}`);
       const data = response.data;
+      const fallback = { trustScore: 100, onTimeRate: 100, cancellationRate: 0, disputeRate: 0 };
       if (Array.isArray(data)) {
-        return data.length > 0 ? data[0] : { score: 100, fulfillmentRate: 100, avgDeliveryDelay: 0, complaintRatio: 0 };
+        return data.length > 0 ? data[0] : fallback;
       }
-      return data || { score: 100, fulfillmentRate: 100, avgDeliveryDelay: 0, complaintRatio: 0 };
+      return data || fallback;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to fetch trust score');
     }

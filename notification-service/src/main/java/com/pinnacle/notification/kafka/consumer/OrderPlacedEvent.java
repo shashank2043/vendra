@@ -6,8 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Local mirror of order-service's com.pinnacle.common.event.OrderPlacedEvent.
- * Field names/types must match for JSON deserialization from the "order-placed" topic.
+ * Local copy of the order-placed event payload. Bound by field name because the
+ * consumer factory sets USE_TYPE_INFO_HEADERS=false and VALUE_DEFAULT_TYPE to this
+ * class, so field names must match the producer (order-service OrderPlacedEvent).
  */
 @Data
 @Builder

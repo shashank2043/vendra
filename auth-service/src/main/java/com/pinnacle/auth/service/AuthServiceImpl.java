@@ -101,7 +101,8 @@ public class AuthServiceImpl implements AuthService {
         throw new UnauthorizedException("Failed to retrieve admin token from Keycloak");
     }
 
-    private void registerUserInKeycloak(String username, String email, String password, String role, boolean enabled) {
+    private void registerUserInKeycloak(String username, String email, String password, String role, boolean enabled,
+                                        String firstName, String lastName) {
         String adminToken = getAdminToken();
         String createUserUrl = String.format("%s/admin/realms/%s/users", keycloakAuthServerUrl, keycloakRealm);
         
@@ -119,6 +120,14 @@ public class AuthServiceImpl implements AuthService {
         userBody.put("username", username);
         userBody.put("email", email);
         userBody.put("enabled", enabled);
+        // Mark email verified so the account can authenticate immediately; otherwise the
+        // realm's direct-grant flow rejects login with invalid_grant (account not fully set up).
+        userBody.put("emailVerified", true);
+        // Keycloak's declarative user profile requires first/last name; without them the
+        // account gets a dynamic VERIFY_PROFILE required action that blocks the password grant.
+        userBody.put("firstName", (firstName != null && !firstName.isBlank()) ? firstName : username);
+        userBody.put("lastName", (lastName != null && !lastName.isBlank()) ? lastName : username);
+        userBody.put("requiredActions", Collections.emptyList());
         userBody.put("credentials", Collections.singletonList(credential));
         
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(userBody, headers);
@@ -217,7 +226,7 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException("Default Customer Role not found"));
 
         // Register in Keycloak first
-        registerUserInKeycloak(request.getUsername(), request.getEmail(), request.getPassword(), "ROLE_CUSTOMER", true);
+        registerUserInKeycloak(request.getUsername(), request.getEmail(), request.getPassword(), "ROLE_CUSTOMER", true, null, null);
 
         // Save locally to keep in sync with local DB
         User user = User.builder()
@@ -259,7 +268,7 @@ public class AuthServiceImpl implements AuthService {
         Role customerRole = roleRepository.findByName("ROLE_CUSTOMER")
                 .orElseThrow(() -> new ResourceNotFoundException("Default Customer Role not found"));
 
-        registerUserInKeycloak(request.getUsername(), request.getEmail(), request.getPassword(), "ROLE_CUSTOMER", true);
+        registerUserInKeycloak(request.getUsername(), request.getEmail(), request.getPassword(), "ROLE_CUSTOMER", true, request.getFirstName(), request.getLastName());
 
         User user = User.builder()
                 .username(request.getUsername())
@@ -283,7 +292,13 @@ public class AuthServiceImpl implements AuthService {
                 .shippingAddress(request.getShippingAddress())
                 .phoneNumber(request.getPhoneNumber())
                 .build();
-        userServiceClient.createProfile(profileReq);
+        try {
+            userServiceClient.createProfile(profileReq);
+        } catch (Exception e) {
+            // Profile creation is best-effort: the Keycloak account and local user
+            // are already persisted, so don't let a user-service hiccup roll them back
+            // (which would orphan the Keycloak account). Consistent with register().
+        }
 
         return userMapper.toDto(savedUser);
     }
@@ -300,13 +315,15 @@ public class AuthServiceImpl implements AuthService {
         Role vendorRole = roleRepository.findByName("ROLE_VENDOR")
                 .orElseThrow(() -> new ResourceNotFoundException("Default Vendor Role not found"));
 
-        registerUserInKeycloak(request.getUsername(), request.getEmail(), request.getPassword(), "ROLE_VENDOR", false);
+        // Vendors can sign in immediately and land on the "pending approval" page; access to
+        // vendor dashboards is gated by approvalStatus (in user-service), not by a disabled login.
+        registerUserInKeycloak(request.getUsername(), request.getEmail(), request.getPassword(), "ROLE_VENDOR", true, request.getBusinessName(), "Vendor");
 
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .enabled(false)
+                .enabled(true)
                 .roles(Set.of(vendorRole))
                 .build();
 
@@ -324,7 +341,13 @@ public class AuthServiceImpl implements AuthService {
                 .taxId(request.getTaxId())
                 .phoneNumber(request.getPhoneNumber())
                 .build();
-        userServiceClient.createProfile(profileReq);
+        try {
+            userServiceClient.createProfile(profileReq);
+        } catch (Exception e) {
+            // Profile creation is best-effort: the Keycloak account and local user
+            // are already persisted, so don't let a user-service hiccup roll them back
+            // (which would orphan the Keycloak account). Consistent with register().
+        }
 
         return userMapper.toDto(savedUser);
     }

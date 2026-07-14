@@ -33,9 +33,8 @@ public class CustomerRegisterRequest {
     @NotBlank(message = "Last name is required")
     private String lastName;
 
-    @NotBlank(message = "Shipping address is required")
+    // Optional at signup; completed later on the profile page.
     private String shippingAddress;
 
-    @NotBlank(message = "Phone number is required")
     private String phoneNumber;
 }

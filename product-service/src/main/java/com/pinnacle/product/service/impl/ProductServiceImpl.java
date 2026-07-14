@@ -19,13 +19,16 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+    private final com.pinnacle.product.service.ImageEmbedder imageEmbedder;
 
     @Override
     public ProductResponse createProduct(ProductRequest request, String vendorId) {
         Product product = productMapper.toEntity(request);
         product.setVendorId(vendorId);
-        product.setApproved(false); // Pending moderation
+        product.setApproved(false); // New products require moderation
         product.setModerationStatus("PENDING");
+        embedImages(product);
+        applyPrimaryImage(product);
 
         Product savedProduct = productRepository.save(product);
         return productMapper.toResponse(savedProduct);
@@ -35,17 +38,35 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse updateProduct(String id, ProductRequest request, String vendorId) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
-        
+
         if (!product.getVendorId().equals(vendorId)) {
             throw new BadRequestException("You do not own this product");
         }
 
+        // Vendors can freely edit their own listing details; editing does NOT send the
+        // product back through admin moderation (approval status is preserved).
         productMapper.updateEntityFromRequest(request, product);
-        product.setApproved(false); // Reset approval status after edits
-        product.setModerationStatus("PENDING");
+        embedImages(product);
+        applyPrimaryImage(product);
 
         Product savedProduct = productRepository.save(product);
         return productMapper.toResponse(savedProduct);
+    }
+
+    // Fetch remote image URLs server-side and inline them as data URIs (best-effort), so
+    // they render in the browser even when hotlink/CORS/proxy blocks direct loading.
+    private void embedImages(Product product) {
+        product.setImageUrls(imageEmbedder.embedAll(product.getImageUrls()));
+        product.setImageUrl(imageEmbedder.embed(product.getImageUrl()));
+    }
+
+    // Keep the single `imageUrl` (used by cart/order/list thumbnails) in sync with the
+    // first of the uploaded images when the caller only provided the gallery list.
+    private void applyPrimaryImage(Product product) {
+        boolean noPrimary = product.getImageUrl() == null || product.getImageUrl().isBlank();
+        if (noPrimary && product.getImageUrls() != null && !product.getImageUrls().isEmpty()) {
+            product.setImageUrl(product.getImageUrls().get(0));
+        }
     }
 
     @Override

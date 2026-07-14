@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -20,6 +21,7 @@ public class ProductResponse {
     private String vendorId;
     private String category;
     private String imageUrl;
+    private List<String> imageUrls;
     private Integer stock;
     private Map<String, Object> attributes;
     private boolean approved;

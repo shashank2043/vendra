@@ -17,10 +17,12 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Optional;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
@@ -40,9 +42,29 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional
     public CreatePaymentResponse createOrder(CreatePaymentRequest request) {
-        String currency = razorpayProperties.getCurrency();
-        // amount in the smallest currency unit (paise) as required by Razorpay
+        // Idempotency: if a non-failed payment already exists for this order, reuse it
+        // (and its Razorpay order) instead of creating a duplicate that could be charged twice.
+        Optional<Payment> existing = paymentRepository.findFirstByOrderIdOrderByCreatedAtDesc(request.getOrderId());
+        if (existing.isPresent() && !"FAILED".equals(existing.get().getStatus())) {
+            Payment p = existing.get();
+            log.info("Idempotent create-order: reusing payment {} (status {}) for order {}",
+                    p.getId(), p.getStatus(), request.getOrderId());
+            return CreatePaymentResponse.builder()
+                    .razorpayOrderId(p.getRazorpayOrderId())
+                    .amount(p.getAmount())
+                    .currency(p.getCurrency())
+                    .keyId(razorpayProperties.getKeyId())
+                    .paymentDbId(p.getId())
+                    .build();
+        }
+
+        // Charge in the currency the buyer sees (falls back to the account's configured currency).
+        String currency = (request.getCurrency() != null && !request.getCurrency().isBlank())
+                ? request.getCurrency().trim().toUpperCase()
+                : razorpayProperties.getCurrency();
+        // amount in the smallest currency unit (e.g. paise) as required by Razorpay
         long amountInPaise = request.getAmount().multiply(BigDecimal.valueOf(100)).longValueExact();
 
         String razorpayOrderId;
@@ -85,11 +107,19 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional
     public PaymentResponse verifyPayment(VerifyPaymentRequest request) {
         Payment payment = paymentRepository
                 .findFirstByRazorpayOrderIdOrderByCreatedAtDesc(request.getRazorpayOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Payment not found for razorpayOrderId: " + request.getRazorpayOrderId()));
+
+        // Idempotency: a payment is captured exactly once. If it's already PAID (e.g. the
+        // webhook arrived first, or the client retried verify), return it without reprocessing.
+        if ("PAID".equals(payment.getStatus())) {
+            log.info("Idempotent verify: payment {} already PAID; skipping reprocessing", payment.getId());
+            return paymentMapper.toResponse(payment);
+        }
 
         boolean valid;
         if (razorpayProperties.isPlaceholder()) {
@@ -130,6 +160,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional
     public String handleWebhook(String payload, String signature) {
         if (!razorpayProperties.isPlaceholder()) {
             try {
@@ -163,6 +194,11 @@ public class PaymentServiceImpl implements PaymentService {
                         paymentRepository
                                 .findFirstByRazorpayOrderIdOrderByCreatedAtDesc(razorpayOrderId)
                                 .ifPresent(payment -> {
+                                    // Idempotent: never reprocess an already-captured payment.
+                                    if ("PAID".equals(payment.getStatus())) {
+                                        log.info("Webhook ignored: payment {} already PAID", payment.getId());
+                                        return;
+                                    }
                                     if (razorpayPaymentId != null) {
                                         payment.setRazorpayPaymentId(razorpayPaymentId);
                                     }

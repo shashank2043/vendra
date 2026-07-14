@@ -8,12 +8,14 @@ import ConfirmDialog from '../../components/common/ConfirmDialog';
 import Badge from '../../components/common/Badge';
 import EmptyState from '../../components/common/EmptyState';
 import axiosInstance from '../../api/axiosInstance';
+import { formatMoney, selectCurrency } from '../../features/currency/currencySlice';
 import { toast } from 'react-toastify';
 
 const ProductsPage = () => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { products, loading } = useAppSelector((state) => state.vendorProducts);
+  const currency = useAppSelector(selectCurrency);
 
   const [vendor, setVendor] = useState(null);
   const [categories, setCategories] = useState({});
@@ -167,7 +169,7 @@ const ProductsPage = () => {
                     </Typography>
                   </TableCell>
                   <TableCell>{p.category || 'Uncategorized'}</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>${p.price}</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>{formatMoney(p.price, currency)}</TableCell>
                   <TableCell>{p.stock}</TableCell>
                   <TableCell>
                     <Badge variant={p.moderationStatus || 'PENDING'}>

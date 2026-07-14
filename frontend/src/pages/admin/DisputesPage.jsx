@@ -120,7 +120,7 @@ const DisputesPage = () => {
                 <TableRow key={d.id} hover>
                   <TableCell sx={{ fontFamily: 'monospace' }}>#{d.id}</TableCell>
                   <TableCell sx={{ fontFamily: 'monospace' }}>#{String(d.orderId).slice(0, 14)}</TableCell>
-                  <TableCell fontWeight={600}>{d.customerName}</TableCell>
+                  <TableCell fontWeight={600}>{d.userId}</TableCell>
                   <TableCell sx={{ color: 'text.secondary', maxWidth: 220 }} noWrap>{d.reason}</TableCell>
                   <TableCell>{new Date(d.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>

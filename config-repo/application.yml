@@ -21,6 +21,9 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
+    # Single-machine dev: advertise loopback so gateway routing survives host IP changes
+    # (Wi-Fi/VPN switches). Override EUREKA_INSTANCE_IP for real multi-host deployments.
+    ip-address: ${EUREKA_INSTANCE_IP:127.0.0.1}
     instance-id: ${spring.application.name}:${random.value}
 
 jwt:
@@ -44,3 +47,11 @@ management:
   endpoint:
     health:
       show-details: always
+  tracing:
+    sampling:
+      # Trace every request during smoke testing; lower this in production.
+      probability: 1.0
+  zipkin:
+    tracing:
+      # Overridden per-environment; docker-compose sets ZIPKIN_ENDPOINT to the zipkin container.
+      endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}

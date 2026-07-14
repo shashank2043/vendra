@@ -4,14 +4,17 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { useSelector } from 'react-redux';
 import App from './App';
 import { store, persistor } from './app/store';
 import getTheme from './theme/muiTheme';
+import { selectThemeMode } from './features/theme/themeSlice';
 import './index.css';
 
-// Light theme only (dark mode intentionally disabled per product decision).
+// Theme mode is driven by the persisted `theme` slice and toggled from the topbar.
 const ThemeWrapper = ({ children }) => {
-  const activeTheme = getTheme('light');
+  const mode = useSelector(selectThemeMode);
+  const activeTheme = getTheme(mode);
   return (
     <ThemeProvider theme={activeTheme}>
       <CssBaseline />

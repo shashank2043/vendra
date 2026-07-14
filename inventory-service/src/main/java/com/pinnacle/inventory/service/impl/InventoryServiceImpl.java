@@ -68,15 +68,17 @@ public class InventoryServiceImpl implements InventoryService {
         if (available < quantity) {
             return false;
         }
-        // Reserve (do not deduct on-hand quantity; scheduler finalizes/releases later)
-        inventory.setReservedQuantity(reserved + quantity);
+        // A placed order is a committed sale here: permanently deduct on-hand quantity
+        // so remaining stock reflects reality immediately. The reservation is recorded as
+        // CONFIRMED so the TTL scheduler never releases it back (which previously undid sales).
+        inventory.setQuantity(inventory.getQuantity() - quantity);
         inventoryRepository.save(inventory);
 
         StockReservation reservation = StockReservation.builder()
                 .orderId(orderId)
                 .productId(productId)
                 .quantity(quantity)
-                .status("RESERVED")
+                .status("CONFIRMED")
                 .createdAt(Instant.now())
                 .build();
         stockReservationRepository.save(reservation);

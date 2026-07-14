@@ -3,13 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Grid, Typography, Card, CardContent, Button, Skeleton, Stack } from '@mui/material';
 import { Users, UserCheck, ShieldAlert, DollarSign, AlertCircle, ArrowRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useAppSelector } from '../../app/hooks';
+import { formatMoney, selectCurrency } from '../../features/currency/currencySlice';
 import axiosInstance from '../../api/axiosInstance';
 import Badge from '../../components/common/Badge';
+import ShopsDialog from '../../components/admin/ShopsDialog';
+import EarningsDialog from '../../components/admin/EarningsDialog';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
+  const currency = useAppSelector(selectCurrency);
 
   const [loading, setLoading] = useState(true);
+  const [vendorList, setVendorList] = useState([]);
+  const [openDetail, setOpenDetail] = useState(null); // 'shops' | 'earnings' | null
   const [metrics, setMetrics] = useState({
     totalVendors: 0,
     pendingApprovals: 0,
@@ -21,17 +28,22 @@ const DashboardPage = () => {
   const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
-    Promise.all([
+    let active = true;
+    const loadMetrics = () => Promise.all([
       axiosInstance.get('/api/v1/vendors'),
       axiosInstance.get('/api/v1/orders'),
       axiosInstance.get('/api/v1/disputes'),
-      axiosInstance.get('/api/v1/products')
+      axiosInstance.get('/api/v1/products'),
+      axiosInstance.get('/api/v1/commission/ledger')
     ])
-      .then(([vendorsRes, ordersRes, disputesRes, productsRes]) => {
+      .then(([vendorsRes, ordersRes, disputesRes, productsRes, ledgerRes]) => {
+        if (!active) return;
         const vendors = vendorsRes.data;
         const orders = ordersRes.data;
         const disputes = disputesRes.data;
         const products = productsRes.data;
+        const ledger = ledgerRes.data || [];
+        setVendorList(vendors || []);
 
         // Calculations
         const totalVendors = vendors.length;
@@ -43,9 +55,9 @@ const DashboardPage = () => {
           return date.toDateString() === new Date().toDateString();
         }).length || 1; // Fallback to 1 for visual feedback if dates match but not calendar day
 
-        const platformRevenue = orders
-          .filter(o => o.status === 'DELIVERED')
-          .reduce((sum, o) => sum + (o.total * 0.15), 0);
+        // Real platform earnings = sum of recorded commission (actual rule rate), the same
+        // source the vendor Earnings page and the drill-down breakdown use.
+        const platformRevenue = ledger.reduce((sum, l) => sum + (Number(l.commissionDeducted) || 0), 0);
 
         const openDisputes = disputes.filter(d => d.status === 'OPEN').length;
         const pendingProducts = products.filter(p => p.moderationStatus === 'PENDING').length;
@@ -73,15 +85,20 @@ const DashboardPage = () => {
         setChartData(volumeChart);
       })
       .catch(err => console.error('Error fetching admin dashboard metrics:', err))
-      .finally(() => setLoading(false));
+      .finally(() => { if (active) setLoading(false); });
+
+    loadMetrics();
+    // Poll so the dashboard reflects new orders/approvals/disputes in near real time.
+    const intervalId = setInterval(loadMetrics, 15000);
+    return () => { active = false; clearInterval(intervalId); };
   }, []);
 
   const stats = [
-    { title: 'Total Shops', value: metrics.totalVendors, icon: Users, color: '#0F172A', bg: 'rgba(15, 23, 42, 0.05)' },
-    { title: 'Pending Approval', value: metrics.pendingApprovals, icon: UserCheck, color: '#D97706', bg: 'rgba(217, 119, 6, 0.08)', highlight: true },
-    { title: 'Orders Today', value: metrics.ordersToday, icon: ShieldAlert, color: '#0F766E', bg: 'rgba(15, 118, 110, 0.08)' },
-    { title: 'Platform Earnings (15%)', value: `$${metrics.platformRevenue.toFixed(2)}`, icon: DollarSign, color: '#16A34A', bg: 'rgba(22, 163, 74, 0.08)' },
-    { title: 'Open Disputes', value: metrics.openDisputes, icon: AlertCircle, color: '#DC2626', bg: 'rgba(220, 38, 38, 0.08)' }
+    { title: 'Total Shops', value: metrics.totalVendors, icon: Users, color: '#0F172A', bg: 'rgba(15, 23, 42, 0.05)', detail: 'shops' },
+    { title: 'Pending Approval', value: metrics.pendingApprovals, icon: UserCheck, color: '#D97706', bg: 'rgba(217, 119, 6, 0.08)', highlight: true, link: '/admin/vendor-approvals' },
+    { title: 'Orders Today', value: metrics.ordersToday, icon: ShieldAlert, color: '#0F766E', bg: 'rgba(15, 118, 110, 0.08)', link: '/admin/orders' },
+    { title: 'Platform Earnings', value: formatMoney(metrics.platformRevenue, currency), icon: DollarSign, color: '#16A34A', bg: 'rgba(22, 163, 74, 0.08)', detail: 'earnings' },
+    { title: 'Open Disputes', value: metrics.openDisputes, icon: AlertCircle, color: '#DC2626', bg: 'rgba(220, 38, 38, 0.08)', link: '/admin/disputes' }
   ];
 
   if (loading) {
@@ -116,7 +133,13 @@ const DashboardPage = () => {
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {stats.map((item, idx) => (
           <Grid item xs={12} sm={6} md={2.4} key={idx}>
-            <Card sx={{ border: '1px solid #E5E7EB', boxShadow: 'none' }}>
+            <Card
+              onClick={item.detail ? () => setOpenDetail(item.detail) : (item.link ? () => navigate(item.link) : undefined)}
+              sx={{
+                border: '1px solid #E5E7EB', boxShadow: 'none',
+                ...((item.detail || item.link) ? { cursor: 'pointer', transition: 'all 0.15s', '&:hover': { borderColor: 'primary.main', boxShadow: '0 4px 14px rgba(0,0,0,0.06)' } } : {}),
+              }}
+            >
               <CardContent sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
                   <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
@@ -228,6 +251,10 @@ const DashboardPage = () => {
         </Grid>
 
       </Grid>
+
+      {/* Drill-down detail views */}
+      <ShopsDialog open={openDetail === 'shops'} onClose={() => setOpenDetail(null)} vendors={vendorList} />
+      <EarningsDialog open={openDetail === 'earnings'} onClose={() => setOpenDetail(null)} />
     </Box>
   );
 };
