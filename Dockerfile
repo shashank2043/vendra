@@ -24,5 +24,6 @@ WORKDIR /app
 ARG SERVICE_NAME
 
 COPY --from=builder /build/${SERVICE_NAME}/target/*.jar app.jar
+COPY --from=builder /build/config-repo ./config-repo
 
 ENTRYPOINT ["java","-jar","app.jar"]
