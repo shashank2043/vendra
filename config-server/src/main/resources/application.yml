@@ -5,17 +5,19 @@ spring:
   application:
     name: config-server
   profiles:
-    active: native
+    active: ${SPRING_PROFILES_ACTIVE:native}
   cloud:
     config:
       server:
         native:
-          search-locations: file:./config-repo
-        # Ready for Git configuration migration by uncommenting below:
-        # git:
-        #   uri: https://github.com/your-org/your-config-repo.git
-        #   search-paths: config-folder
-        #   clone-on-start: true
+          search-locations: ${CONFIG_REPO_PATH:file:./config-repo}
+        # Ready for Git configuration migration:
+        git:
+          uri: ${CONFIG_GIT_URI:https://github.com/your-org/your-config-repo.git}
+          search-paths: ${CONFIG_GIT_SEARCH_PATHS:}
+          username: ${CONFIG_GIT_USERNAME:}
+          password: ${CONFIG_GIT_PASSWORD:}
+          clone-on-start: ${CONFIG_GIT_CLONE_ON_START:true}
 
 management:
   endpoints:
