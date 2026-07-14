@@ -70,6 +70,8 @@ public class OrderServiceImpl implements OrderService {
         for (OrderItemRequest itemReq : request.getItems()) {
             OrderItem item = OrderItem.builder()
                     .productId(itemReq.getProductId())
+                    .name(itemReq.getName())
+                    .imageUrl(itemReq.getImageUrl())
                     .quantity(itemReq.getQuantity())
                     .price(itemReq.getPrice())
                     .vendorId(itemReq.getVendorId())

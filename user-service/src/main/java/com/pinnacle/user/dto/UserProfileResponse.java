@@ -15,6 +15,8 @@ public class UserProfileResponse {
     private String email;
     private String role;
     private boolean approved;
+    // PENDING / APPROVED / REJECTED — the frontend routes vendors on this value.
+    private String approvalStatus;
 
     // Customer fields
     private String firstName;

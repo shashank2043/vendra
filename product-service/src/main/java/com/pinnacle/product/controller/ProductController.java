@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
-@Tag(name = "Product Controller", description = "Endpoints for managing products, including moderation and onboarding")
+@Tag(name = "Product Controller", description = "Endpoints for product catalogue, vendor listings and moderation")
 public class ProductController {
 
     private final ProductService productService;
@@ -30,16 +29,34 @@ public class ProductController {
         }
     }
 
+    @GetMapping
+    @Operation(summary = "List products (storefront, vendor catalogue or moderation queue)")
+    public ResponseEntity<ApiResponse<List<ProductResponse>>> getProducts(
+            @RequestParam(value = "vendorId", required = false) String vendorId,
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "approved", required = false) Boolean approved) {
+
+        List<ProductResponse> response = productService.getProducts(vendorId, category, approved);
+        return ResponseEntity.ok(ApiResponse.success(response, "Products retrieved successfully"));
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Get a single product by ID")
+    public ResponseEntity<ApiResponse<ProductResponse>> getProductById(@PathVariable("id") String id) {
+        ProductResponse response = productService.getProductById(id);
+        return ResponseEntity.ok(ApiResponse.success(response, "Product retrieved successfully"));
+    }
+
     @PostMapping
-    @Operation(summary = "Onboard a new product (Vendor only)")
+    @Operation(summary = "Create a new product (Vendor only)")
     public ResponseEntity<ApiResponse<ProductResponse>> createProduct(
             @Valid @RequestBody ProductRequest request,
             @RequestHeader("X-User-Name") String username,
             @RequestHeader("X-User-Roles") String roles) {
-        
+
         validateRole(roles, "vendor");
         ProductResponse response = productService.createProduct(request, username);
-        return new ResponseEntity<>(ApiResponse.success(response, "Product submitted for moderation successfully"), HttpStatus.CREATED);
+        return ResponseEntity.ok(ApiResponse.success(response, "Product submitted for moderation"));
     }
 
     @PutMapping("/{id}")
@@ -49,10 +66,10 @@ public class ProductController {
             @Valid @RequestBody ProductRequest request,
             @RequestHeader("X-User-Name") String username,
             @RequestHeader("X-User-Roles") String roles) {
-        
+
         validateRole(roles, "vendor");
         ProductResponse response = productService.updateProduct(id, request, username);
-        return ResponseEntity.ok(ApiResponse.success(response, "Product updated and resubmitted for moderation"));
+        return ResponseEntity.ok(ApiResponse.success(response, "Product updated successfully"));
     }
 
     @DeleteMapping("/{id}")
@@ -61,59 +78,32 @@ public class ProductController {
             @PathVariable("id") String id,
             @RequestHeader("X-User-Name") String username,
             @RequestHeader("X-User-Roles") String roles) {
-        
+
         validateRole(roles, "vendor");
         productService.deleteProduct(id, username);
         return ResponseEntity.ok(ApiResponse.success(null, "Product deleted successfully"));
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Get product by ID")
-    public ResponseEntity<ApiResponse<ProductResponse>> getProductById(@PathVariable("id") String id) {
-        ProductResponse response = productService.getProductById(id);
-        return ResponseEntity.ok(ApiResponse.success(response, "Product retrieved successfully"));
-    }
-
-    @GetMapping
-    @Operation(summary = "List products with optional vendorId, category and approved filters")
-    public ResponseEntity<ApiResponse<List<ProductResponse>>> getProducts(
-            @RequestParam(required = false) String vendorId,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) Boolean approved) {
-        List<ProductResponse> response = productService.getProducts(vendorId, category, approved);
-        return ResponseEntity.ok(ApiResponse.success(response, "Products retrieved successfully"));
-    }
-
-    @PatchMapping("/{id}/stock")
-    @Operation(summary = "Internal: update denormalized product stock (service-to-service)")
-    public ResponseEntity<ApiResponse<ProductResponse>> updateStock(
-            @PathVariable("id") String id,
-            @RequestBody StockUpdateRequest request) {
-        ProductResponse response = productService.updateStock(id, request.getStock());
-        return ResponseEntity.ok(ApiResponse.success(response, "Product stock updated successfully"));
-    }
-
-    @GetMapping("/my-products")
-    @Operation(summary = "List vendor owned products")
-    public ResponseEntity<ApiResponse<List<ProductResponse>>> getMyProducts(
-            @RequestHeader("X-User-Name") String username,
-            @RequestHeader("X-User-Roles") String roles) {
-        
-        validateRole(roles, "vendor");
-        List<ProductResponse> response = productService.getProductsByVendor(username);
-        return ResponseEntity.ok(ApiResponse.success(response, "Vendor products retrieved successfully"));
-    }
-
     @PostMapping("/{id}/moderate")
-    @Operation(summary = "Moderate product approval status (Admin only)")
+    @Operation(summary = "Approve or reject a product (Admin only)")
     public ResponseEntity<ApiResponse<ProductResponse>> moderateProduct(
             @PathVariable("id") String id,
-            @RequestParam boolean approved,
-            @RequestParam(required = false) String comment,
+            @RequestParam("approved") boolean approved,
+            @RequestParam(value = "comment", required = false) String comment,
             @RequestHeader("X-User-Roles") String roles) {
-        
+
         validateRole(roles, "admin");
         ProductResponse response = productService.moderateProduct(id, approved, comment);
-        return ResponseEntity.ok(ApiResponse.success(response, "Product moderation updated successfully"));
+        return ResponseEntity.ok(ApiResponse.success(response, "Product moderation updated"));
+    }
+
+    @PutMapping("/{id}/stock")
+    @Operation(summary = "Update product stock (internal, called by inventory-service)")
+    public ResponseEntity<ApiResponse<ProductResponse>> updateStock(
+            @PathVariable("id") String id,
+            @RequestBody StockUpdateRequest body) {
+
+        ProductResponse response = productService.updateStock(id, body.getStock());
+        return ResponseEntity.ok(ApiResponse.success(response, "Stock updated successfully"));
     }
 }

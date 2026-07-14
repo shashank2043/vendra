@@ -29,7 +29,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
         log.error("Validation error occurred");
-        log.error(ex.getMessage());
         List<String> errors = ex.getBindingResult()
                 .getAllErrors()
                 .stream()

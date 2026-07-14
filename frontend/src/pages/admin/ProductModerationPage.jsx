@@ -3,6 +3,7 @@ import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead
 import { Check, X, ShieldAlert } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { fetchModerationQueue, approveProduct, rejectProduct } from '../../features/admin/productModeration/moderationSlice';
+import { formatMoney, selectCurrency } from '../../features/currency/currencySlice';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import Badge from '../../components/common/Badge';
 import EmptyState from '../../components/common/EmptyState';
@@ -12,6 +13,7 @@ import { toast } from 'react-toastify';
 const ProductModerationPage = () => {
   const dispatch = useAppDispatch();
   const { queue, loading } = useAppSelector((state) => state.adminModeration);
+  const currency = useAppSelector(selectCurrency);
 
   const [categories, setCategories] = useState([]);
   const [vendors, setVendors] = useState([]);
@@ -183,7 +185,7 @@ const ProductModerationPage = () => {
                   </TableCell>
                   <TableCell>{p.category || 'Uncategorized'}</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>{getVendorName(p.vendorId)}</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>${p.price}</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>{formatMoney(p.price, currency)}</TableCell>
                   <TableCell align="right">
                     <Box sx={{ display: 'inline-flex', gap: 1 }}>
                       <Button

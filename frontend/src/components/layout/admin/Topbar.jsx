@@ -6,6 +6,8 @@ import { useAppDispatch, useAppSelector } from '../../../app/hooks';
 import { logout } from '../../../features/auth/authSlice';
 import NotificationBell from '../../../features/notifications/components/NotificationBell';
 import NotificationDropdown from '../../../features/notifications/components/NotificationDropdown';
+import CurrencySelector from '../../common/CurrencySelector';
+import ThemeToggle from '../../common/ThemeToggle';
 
 const Topbar = ({ onMenuClick }) => {
   const location = useLocation();
@@ -63,6 +65,12 @@ const Topbar = ({ onMenuClick }) => {
 
           {/* Right menu icons */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {/* Currency switcher (shared with customer/vendor) */}
+            <CurrencySelector />
+
+            {/* Theme toggle */}
+            <ThemeToggle />
+
             {/* Notifications */}
             <NotificationBell onClick={handleNotifOpen} />
 

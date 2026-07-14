@@ -11,12 +11,10 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CommissionRuleRequest {
-    // Frontend category label -> entity `category`.
+public class CommissionRuleResponse {
+    private Long id;
     private String categoryName;
-
-    // Frontend sends a 0..1 fraction; the entity stores a 0..100 percentage.
+    // 0..1 fraction, as the frontend expects (it renders commissionRate * 100).
     private BigDecimal commissionRate;
-
-    private Boolean active;
+    private boolean active;
 }

@@ -3,6 +3,7 @@ import { Box, Typography, Grid, Card, CardContent, Table, TableBody, TableCell, 
 import { Wallet, Sparkles } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { fetchCommissionLedger } from '../../features/vendor/commission/commissionSlice';
+import { formatMoney, selectCurrency } from '../../features/currency/currencySlice';
 import axiosInstance from '../../api/axiosInstance';
 import EmptyState from '../../components/common/EmptyState';
 
@@ -10,6 +11,7 @@ const EarningsPage = () => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { ledger, loading } = useAppSelector((state) => state.vendorCommission);
+  const currency = useAppSelector(selectCurrency);
   const [vendor, setVendor] = useState(null);
 
   useEffect(() => {
@@ -81,9 +83,9 @@ const EarningsPage = () => {
       {/* Stat Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {[
-          { title: 'Gross Revenue', value: `$${grossSales.toFixed(2)}`, color: 'text.primary' },
-          { title: 'Commission Deducted (15%)', value: `-$${commissionDeducted.toFixed(2)}`, color: 'error.main' },
-          { title: 'Net Partner Payout', value: `$${netPayout.toFixed(2)}`, color: 'success.main' }
+          { title: 'Gross Revenue', value: formatMoney(grossSales, currency), color: 'text.primary' },
+          { title: 'Commission Deducted (15%)', value: `-${formatMoney(commissionDeducted, currency)}`, color: 'error.main' },
+          { title: 'Net Partner Payout', value: formatMoney(netPayout, currency), color: 'success.main' }
         ].map((card, i) => (
           <Grid item xs={12} sm={4} key={i}>
             <Card sx={{ border: '1px solid #E5E7EB', boxShadow: 'none' }}>
@@ -125,13 +127,13 @@ const EarningsPage = () => {
                 <TableRow key={item.id} hover>
                   <TableCell sx={{ fontFamily: 'monospace' }}>#{String(item.orderId).slice(0, 14)}</TableCell>
                   <TableCell>{new Date(item.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell>${item.grossSales.toFixed(2)}</TableCell>
+                  <TableCell>{formatMoney(item.grossSales, currency)}</TableCell>
                   <TableCell>{(item.commissionRate * 100).toFixed(0)}%</TableCell>
                   <TableCell sx={{ color: 'error.main', fontWeight: 600 }}>
-                    -${item.commissionDeducted.toFixed(2)}
+                    -{formatMoney(item.commissionDeducted, currency)}
                   </TableCell>
                   <TableCell align="right" sx={{ fontWeight: 700, color: 'success.main' }}>
-                    ${item.netPayout.toFixed(2)}
+                    {formatMoney(item.netPayout, currency)}
                   </TableCell>
                 </TableRow>
               ))}

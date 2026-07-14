@@ -42,7 +42,8 @@ const TrustScorePage = () => {
     return '#BE123C';
   };
 
-  const scoreColor = getScoreColor(scoreData.score);
+  const trustScore = Math.round(scoreData.trustScore ?? 0);
+  const scoreColor = getScoreColor(trustScore);
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -68,7 +69,7 @@ const TrustScorePage = () => {
           />
           <CircularProgress
             variant="determinate"
-            value={scoreData.score}
+            value={trustScore}
             size={160}
             thickness={5}
             sx={{
@@ -91,7 +92,7 @@ const TrustScorePage = () => {
             }}
           >
             <Typography variant="h3" component="div" fontWeight={900} color="primary.main" sx={{ letterSpacing: '-0.04em' }}>
-              {scoreData.score}
+              {trustScore}
             </Typography>
             <Typography variant="caption" color="text.secondary" fontWeight={700}>
               TRUST LEVEL
@@ -99,7 +100,7 @@ const TrustScorePage = () => {
           </Box>
         </Box>
         <Typography variant="subtitle1" fontWeight={750} sx={{ mb: 1 }}>
-          {scoreData.score >= 90 ? 'Excellent Standing' : scoreData.score >= 70 ? 'Fair Standing' : 'Critical Standing'}
+          {trustScore >= 90 ? 'Excellent Standing' : trustScore >= 70 ? 'Fair Standing' : 'Critical Standing'}
         </Typography>
         <Typography variant="body2" color="text.secondary" align="center" sx={{ maxWidth: 500 }}>
           Your Trust Score represents customer fulfillment efficiency, dispatch latency, and low cancellation ratios. Keep it above 90 to qualify for "Preferred Seller" benefits.
@@ -123,7 +124,7 @@ const TrustScorePage = () => {
                 Fulfillment Rate
               </Typography>
               <Typography variant="h4" fontWeight={850} color="primary.main" sx={{ mb: 1 }}>
-                {scoreData.fulfillmentRate}%
+                {Math.round(scoreData.onTimeRate ?? 0)}%
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                 Percentage of accepted orders fulfilled without cancellations.
@@ -144,13 +145,13 @@ const TrustScorePage = () => {
                 </Box>
               </Box>
               <Typography variant="caption" color="text.secondary" fontWeight={650} sx={{ textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
-                Avg Dispatch Latency
+                Cancellation Rate
               </Typography>
               <Typography variant="h4" fontWeight={850} color="primary.main" sx={{ mb: 1 }}>
-                {scoreData.avgDeliveryDelay} Days
+                {Math.round(scoreData.cancellationRate ?? 0)}%
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                Average elapsed time before order packages are shipped.
+                Percentage of accepted orders that were later cancelled.
               </Typography>
             </CardContent>
           </Card>
@@ -171,7 +172,7 @@ const TrustScorePage = () => {
                 Complaint Ratio
               </Typography>
               <Typography variant="h4" fontWeight={850} color="primary.main" sx={{ mb: 1 }}>
-                {scoreData.complaintRatio}%
+                {Math.round(scoreData.disputeRate ?? 0)}%
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                 Ratio of customer complaints or refund requests filed.

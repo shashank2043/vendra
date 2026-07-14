@@ -3,11 +3,13 @@ import { Box, Grid, Typography, Card, CardContent, Table, TableBody, TableCell, 
 import { DollarSign, ClipboardList, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAppSelector } from '../../app/hooks';
+import { formatMoney, selectCurrency } from '../../features/currency/currencySlice';
 import axiosInstance from '../../api/axiosInstance';
 import Badge from '../../components/common/Badge';
 
 const DashboardPage = () => {
   const { user } = useAppSelector((state) => state.auth);
+  const currency = useAppSelector(selectCurrency);
   const [vendor, setVendor] = useState(null);
   const [stats, setStats] = useState({
     totalSales: 0,
@@ -56,7 +58,7 @@ const DashboardPage = () => {
           .length;
 
         const trustData = Array.isArray(trustRes.data) ? trustRes.data[0] : trustRes.data;
-        const trustScore = trustData?.score || 100;
+        const trustScore = trustData?.trustScore ?? 100;
 
         const analyticsData = Array.isArray(analyticsRes.data) ? analyticsRes.data[0] : analyticsRes.data;
 
@@ -70,7 +72,7 @@ const DashboardPage = () => {
   }, [user]);
 
   const statItems = [
-    { title: 'Total Revenue', value: `$${stats.totalSales}`, icon: DollarSign, color: '#0F766E', bg: 'rgba(15, 118, 110, 0.08)' },
+    { title: 'Total Revenue', value: formatMoney(stats.totalSales, currency), icon: DollarSign, color: '#0F766E', bg: 'rgba(15, 118, 110, 0.08)' },
     { title: 'Pending Orders', value: stats.pendingOrders, icon: ClipboardList, color: '#D97706', bg: 'rgba(217, 119, 6, 0.08)' },
     { title: 'Low Stock Alerts', value: stats.lowStockAlerts, icon: AlertTriangle, color: '#BE123C', bg: 'rgba(190, 18, 60, 0.08)' },
     { title: 'Trust Score', value: `${stats.trustScore}%`, icon: ShieldCheck, color: '#C2A26F', bg: 'rgba(194, 162, 111, 0.08)' }

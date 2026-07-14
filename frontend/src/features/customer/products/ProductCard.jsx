@@ -8,11 +8,13 @@ import { addToCart } from '../cart/cartSlice';
 import { toast } from 'react-toastify';
 import Rating from '../../../components/common/Rating';
 import axiosInstance from '../../../api/axiosInstance';
+import { formatMoney, selectCurrency } from '../../currency/currencySlice';
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const wishlist = useAppSelector((state) => state.wishlist.productIds);
+  const currency = useAppSelector(selectCurrency);
   const isWishlisted = wishlist.includes(product.id);
   const [hovered, setHovered] = useState(false);
   const [vendorName, setVendorName] = useState('Artisanal Seller');
@@ -150,10 +152,24 @@ const ProductCard = ({ product }) => {
         {/* Price & Rating */}
         <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="body1" fontWeight={800} color="primary.main">
-            ${product.price}
+            {formatMoney(product.price, currency)}
           </Typography>
           <Rating value={product.rating} readOnly size="small" />
         </Box>
+
+        {/* Remaining stock */}
+        {typeof product.stock === 'number' && (
+          <Typography
+            variant="caption"
+            fontWeight={650}
+            color={product.stock > 0 ? (product.stock <= 5 ? 'warning.main' : 'success.main') : 'error.main'}
+            sx={{ mt: 0.75 }}
+          >
+            {product.stock > 0
+              ? (product.stock <= 5 ? `Only ${product.stock} left` : `${product.stock} in stock`)
+              : 'Out of stock'}
+          </Typography>
+        )}
       </CardContent>
     </Card>
   );

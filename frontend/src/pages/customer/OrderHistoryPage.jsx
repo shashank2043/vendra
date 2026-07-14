@@ -4,6 +4,7 @@ import { Package, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { fetchOrders } from '../../features/customer/orders/orderSlice';
+import { formatMoney, selectCurrency } from '../../features/currency/currencySlice';
 import Badge from '../../components/common/Badge';
 import EmptyState from '../../components/common/EmptyState';
 import axiosInstance from '../../api/axiosInstance';
@@ -13,6 +14,7 @@ const OrderHistoryPage = () => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { orders, loading } = useAppSelector((state) => state.orders);
+  const currency = useAppSelector(selectCurrency);
 
   const [vendorNames, setVendorNames] = useState({});
 
@@ -90,7 +92,7 @@ const OrderHistoryPage = () => {
                         Total
                       </Typography>
                       <Typography variant="body2" fontWeight={700} color="primary.main">
-                        ${order.total}
+                        {formatMoney(order.total, currency)}
                       </Typography>
                     </Box>
                     <Box>
@@ -127,7 +129,7 @@ const OrderHistoryPage = () => {
                             <Box>
                               <Typography variant="body2" fontWeight={700}>{item.name}</Typography>
                               <Typography variant="caption" color="text.secondary">
-                                Qty: {item.quantity} &bull; ${item.price} each
+                                Qty: {item.quantity} &bull; {formatMoney(item.price, currency)} each
                               </Typography>
                             </Box>
                           </Box>

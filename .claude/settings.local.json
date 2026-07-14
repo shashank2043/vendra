@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(java *)",
+      "PowerShell(mvn *)",
+      "PowerShell(curl.exe -L -s -o C:\\\\vendra-infra\\\\zipkin.jar \"https://search.maven.org/remote_content?g=io.zipkin&a=zipkin-server&v=LATEST&c=exec\"; Write-Output \"zipkin download exit: $LASTEXITCODE\"; \\(Get-Item C:\\\\vendra-infra\\\\zipkin.jar\\).Length)",
+      "PowerShell(curl.exe -L -s -o C:\\\\vendra-infra\\\\keycloak.zip \"https://github.com/keycloak/keycloak/releases/download/24.0.5/keycloak-24.0.5.zip\"; Write-Output \"keycloak download exit: $LASTEXITCODE\"; \\(Get-Item C:\\\\vendra-infra\\\\keycloak.zip\\).Length)",
+      "PowerShell(curl.exe -L -s -o C:\\\\vendra-infra\\\\mongodb.zip \"https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-7.0.14.zip\"; Write-Output \"mongodb download exit: $LASTEXITCODE\"; \\(Get-Item C:\\\\vendra-infra\\\\mongodb.zip\\).Length)",
+      "PowerShell($z = Get-Item C:\\\\vendra-infra\\\\zipkin.jar; Write-Output \\(\"zipkin.jar size MB: \" + [math]::Round\\($z.Length/1MB,1\\)\\))",
+      "PowerShell(Invoke-WebRequest -UseBasicParsing \"https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-7.0.14.zip\" -OutFile C:\\\\vendra-infra\\\\mongodb.zip; Write-Output \\(\"mongodb.zip MB: \" + [math]::Round\\(\\(Get-Item C:\\\\vendra-infra\\\\mongodb.zip\\).Length/1MB,1\\)\\))",
+      "PowerShell(Get-Content C:\\\\kafka\\\\config\\\\kraft\\\\server.properties | Where-Object { $_ -match '^\\(process.roles|node.id|controller.quorum.voters|listeners|advertised.listeners|log.dirs\\)' })",
+      "PowerShell(& C:\\\\mongodb\\\\bin\\\\mongod.exe --dbpath C:\\\\data\\\\db --port 27017 --bind_ip 127.0.0.1)",
+      "PowerShell(foreach \\($p in 3306,27017,9092,9411,8083\\) { $c = Get-NetTCPConnection -State Listen -LocalPort $p -ErrorAction SilentlyContinue; Write-Output \\(\"{0,-6} {1}\" -f $p, $\\(if\\($c\\){'UP'}else{'--'}\\)\\) })",
+      "PowerShell(Start-Sleep -Seconds 20; if \\(Test-Path C:\\\\vendra-infra\\\\jdk21.zip\\) { [math]::Round\\(\\(Get-Item C:\\\\vendra-infra\\\\jdk21.zip\\).Length/1MB,1\\) } else { \"gone\" })",
+      "PowerShell(Start-Sleep -Seconds 25; if \\(Test-Path C:\\\\vendra-infra\\\\jdk21.zip\\) { [math]::Round\\(\\(Get-Item C:\\\\vendra-infra\\\\jdk21.zip\\).Length/1MB,1\\) })",
+      "PowerShell(& 'C:\\\\Users\\\\SURAJB~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-SURAJBEHARA-Downloads-vendra-main\\\\462ccf68-53f7-4a08-9a6a-457a122863b0\\\\scratchpad\\\\smoke.ps1')",
+      "PowerShell(Get-CimInstance *)",
+      "PowerShell(Get-ChildItem C:\\\\vendra-infra\\\\e2e\\\\shots | Select-Object Name, @{n='KB';e={[math]::Round\\($_.Length/1KB\\)}} | Format-Table -AutoSize)"
+    ]
+  }
+}

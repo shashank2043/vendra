@@ -7,7 +7,7 @@ const initialState = {
     addressLine1: '',
     city: '',
     postalCode: '',
-    country: 'USA'
+    country: 'United States'
   },
   paymentMethod: 'Razorpay',
 };
@@ -38,7 +38,7 @@ const checkoutSlice = createSlice({
         addressLine1: '',
         city: '',
         postalCode: '',
-        country: 'USA'
+        country: 'United States'
       };
       state.paymentMethod = 'Razorpay';
     }

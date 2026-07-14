@@ -19,6 +19,11 @@ public class OrderItemRequest {
     @NotBlank(message = "Product ID is required")
     private String productId;
 
+    // Optional product snapshot carried from the cart for display in order views.
+    private String name;
+
+    private String imageUrl;
+
     @NotNull(message = "Quantity is required")
     @Min(value = 1, message = "Quantity must be at least 1")
     private Integer quantity;

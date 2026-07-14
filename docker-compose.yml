@@ -65,6 +65,17 @@ services:
     depends_on:
       - zookeeper
 
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: vendra-zipkin
+    ports:
+      - "9411:9411"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:9411/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   config-server:
     build:
       context: .
@@ -114,6 +125,7 @@ services:
     environment:
       CONFIG_SERVER_URL: ${CONFIG_SERVER_URL:-http://config-server:8888}
       EUREKA_SERVER_URL: ${EUREKA_SERVER_URL:-http://discovery-server:8761/eureka/}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT:-http://zipkin:9411/api/v2/spans}
     depends_on:
       config-server:
         condition: service_healthy
@@ -132,6 +144,7 @@ services:
     environment:
       CONFIG_SERVER_URL: ${CONFIG_SERVER_URL:-http://config-server:8888}
       EUREKA_SERVER_URL: ${EUREKA_SERVER_URL:-http://discovery-server:8761/eureka/}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT:-http://zipkin:9411/api/v2/spans}
       DB_HOST: ${DB_HOST:-mysql}
       DB_PORT: ${DB_PORT:-3306}
       DB_NAME: ${AUTH_DB_NAME:-auth_db}
@@ -160,6 +173,7 @@ services:
     environment:
       CONFIG_SERVER_URL: ${CONFIG_SERVER_URL:-http://config-server:8888}
       EUREKA_SERVER_URL: ${EUREKA_SERVER_URL:-http://discovery-server:8761/eureka/}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT:-http://zipkin:9411/api/v2/spans}
       DB_HOST: ${DB_HOST:-mysql}
       DB_PORT: ${DB_PORT:-3306}
       DB_NAME: ${NOTIFICATION_DB_NAME:-notification_db}
@@ -188,6 +202,7 @@ services:
     environment:
       CONFIG_SERVER_URL: ${CONFIG_SERVER_URL:-http://config-server:8888}
       EUREKA_SERVER_URL: ${EUREKA_SERVER_URL:-http://discovery-server:8761/eureka/}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT:-http://zipkin:9411/api/v2/spans}
       MONGODB_HOST: mongodb
       MONGODB_PORT: 27017
     depends_on:
@@ -210,6 +225,7 @@ services:
     environment:
       CONFIG_SERVER_URL: ${CONFIG_SERVER_URL:-http://config-server:8888}
       EUREKA_SERVER_URL: ${EUREKA_SERVER_URL:-http://discovery-server:8761/eureka/}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT:-http://zipkin:9411/api/v2/spans}
       DB_HOST: ${DB_HOST:-mysql}
       DB_PORT: ${DB_PORT:-3306}
       DB_NAME: order_db
@@ -238,6 +254,7 @@ services:
     environment:
       CONFIG_SERVER_URL: ${CONFIG_SERVER_URL:-http://config-server:8888}
       EUREKA_SERVER_URL: ${EUREKA_SERVER_URL:-http://discovery-server:8761/eureka/}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT:-http://zipkin:9411/api/v2/spans}
       DB_HOST: ${DB_HOST:-mysql}
       DB_PORT: ${DB_PORT:-3306}
       DB_NAME: inventory_db
@@ -266,6 +283,7 @@ services:
     environment:
       CONFIG_SERVER_URL: ${CONFIG_SERVER_URL:-http://config-server:8888}
       EUREKA_SERVER_URL: ${EUREKA_SERVER_URL:-http://discovery-server:8761/eureka/}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT:-http://zipkin:9411/api/v2/spans}
       DB_HOST: ${DB_HOST:-mysql}
       DB_PORT: ${DB_PORT:-3306}
       DB_NAME: user_db
@@ -291,6 +309,7 @@ services:
     environment:
       CONFIG_SERVER_URL: ${CONFIG_SERVER_URL:-http://config-server:8888}
       EUREKA_SERVER_URL: ${EUREKA_SERVER_URL:-http://discovery-server:8761/eureka/}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT:-http://zipkin:9411/api/v2/spans}
       MONGODB_HOST: mongodb
       MONGODB_PORT: 27017
     depends_on:
@@ -313,6 +332,7 @@ services:
     environment:
       CONFIG_SERVER_URL: ${CONFIG_SERVER_URL:-http://config-server:8888}
       EUREKA_SERVER_URL: ${EUREKA_SERVER_URL:-http://discovery-server:8761/eureka/}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT:-http://zipkin:9411/api/v2/spans}
       DB_HOST: ${DB_HOST:-mysql}
       DB_PORT: ${DB_PORT:-3306}
       DB_NAME: payment_db
@@ -340,6 +360,7 @@ services:
     environment:
       CONFIG_SERVER_URL: ${CONFIG_SERVER_URL:-http://config-server:8888}
       EUREKA_SERVER_URL: ${EUREKA_SERVER_URL:-http://discovery-server:8761/eureka/}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT:-http://zipkin:9411/api/v2/spans}
     depends_on:
       config-server:
         condition: service_healthy

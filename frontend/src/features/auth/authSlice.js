@@ -34,7 +34,9 @@ const enrichProfile = async (decoded, role, accessToken) => {
     approvalStatus: role === 'VENDOR' ? 'PENDING' : 'APPROVED',
   };
 
-  const endpoints = ['/auth/profile', '/api/v1/users/profile'];
+  // user-service profile is the authoritative source for approvalStatus (a vendor's
+  // approve/reject lives there); try it first, then fall back to the auth profile.
+  const endpoints = ['/api/v1/users/profile', '/auth/profile'];
   const authHeader = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
   for (const url of endpoints) {
     try {

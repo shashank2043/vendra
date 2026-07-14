@@ -3,18 +3,24 @@ import { Box, Grid, Typography, Card, CardContent, Button, ButtonGroup, Circular
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { fetchReportsSummary } from '../../features/admin/reports/reportSlice';
+import { formatMoney, selectCurrency } from '../../features/currency/currencySlice';
 
 const ReportsPage = () => {
   const dispatch = useAppDispatch();
   const { summary, loading } = useAppSelector((state) => state.adminReports);
+  const currency = useAppSelector(selectCurrency);
 
   const [dateRange, setDateRange] = useState('All');
 
   useEffect(() => {
     dispatch(fetchReportsSummary());
+    // Auto-refresh so platform reports stay current while the admin views them.
+    const intervalId = setInterval(() => dispatch(fetchReportsSummary()), 15000);
+    return () => clearInterval(intervalId);
   }, [dispatch]);
 
-  if (loading || !summary) {
+  // Only block on the very first load; background refreshes keep the last data visible.
+  if (!summary) {
     return (
       <Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
@@ -90,7 +96,7 @@ const ReportsPage = () => {
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {[
           { title: 'Platform SLA Compliance', value: `${summary.slaCompliance}%`, desc: 'Average fulfillment trust score across all approved shops.' },
-          { title: 'Commission Receipts (15%)', value: `$${filteredRevenue.reduce((sum, item) => sum + item.revenue, 0).toFixed(2)}`, desc: 'Aggregated revenue cut from delivered purchases.' },
+          { title: 'Commission Receipts', value: formatMoney(filteredRevenue.reduce((sum, item) => sum + item.revenue, 0), currency), desc: 'Aggregated platform commission from sales.' },
           { title: 'Platform Claims Filed', value: summary.disputesCount, desc: 'Total volume of customer disputes currently registered.' }
         ].map((card, i) => (
           <Grid item xs={12} sm={4} key={i}>

@@ -149,12 +149,9 @@ const OrderTrackingPage = () => {
                 <Typography variant="subtitle2" fontWeight={700} color="secondary.dark" sx={{ mb: 2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Delivery Address
                 </Typography>
-                <Typography variant="body2" fontWeight={700}>{order.shippingAddress?.fullName}</Typography>
-                <Typography variant="body2" color="text.secondary">{order.shippingAddress?.addressLine1}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {order.shippingAddress?.city}, {order.shippingAddress?.postalCode}
+                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>
+                  {order.shippingAddress || 'No delivery address on file.'}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">{order.shippingAddress?.country}</Typography>
               </CardContent>
             </Card>
           </Stack>

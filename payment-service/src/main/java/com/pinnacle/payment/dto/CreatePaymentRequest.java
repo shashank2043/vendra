@@ -22,4 +22,8 @@ public class CreatePaymentRequest {
     @NotNull
     @Positive
     private BigDecimal amount;
+
+    // Optional ISO currency the buyer is paying in (e.g. INR, USD). Falls back to the
+    // configured Razorpay account currency when absent.
+    private String currency;
 }

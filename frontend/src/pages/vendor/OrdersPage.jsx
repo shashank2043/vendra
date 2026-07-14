@@ -3,6 +3,7 @@ import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead
 import { ChevronDown, ChevronUp, CheckCircle, Truck, ShoppingBag } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { fetchVendorOrders, updateOrderStatus } from '../../features/vendor/orders/orderSlice';
+import { formatMoney, selectCurrency } from '../../features/currency/currencySlice';
 import axiosInstance from '../../api/axiosInstance';
 import Badge from '../../components/common/Badge';
 import EmptyState from '../../components/common/EmptyState';
@@ -10,6 +11,7 @@ import { toast } from 'react-toastify';
 
 const OrderRow = ({ order, onStatusUpdate }) => {
   const [open, setOpen] = useState(false);
+  const currency = useAppSelector(selectCurrency);
 
   const getActionDetails = () => {
     switch (order.status) {
@@ -42,7 +44,7 @@ const OrderRow = ({ order, onStatusUpdate }) => {
             {order.status}
           </Badge>
         </TableCell>
-        <TableCell align="right" sx={{ fontWeight: 700 }}>${order.total}</TableCell>
+        <TableCell align="right" sx={{ fontWeight: 700 }}>{formatMoney(order.total, currency)}</TableCell>
       </TableRow>
       <TableRow>
         <TableCell colSpan={6} style={{ paddingBottom: 0, paddingTop: 0 }}>
@@ -72,7 +74,7 @@ const OrderRow = ({ order, onStatusUpdate }) => {
                         <Box component="img" src={item.imageUrl} sx={{ width: 40, height: 40, borderRadius: 1, objectFit: 'cover', border: '1px solid #E5E7EB' }} />
                         <Box>
                           <Typography variant="body2" fontWeight={700}>{item.name}</Typography>
-                          <Typography variant="caption" color="text.secondary">Qty: {item.quantity} &bull; ${item.price} each</Typography>
+                          <Typography variant="caption" color="text.secondary">Qty: {item.quantity} &bull; {formatMoney(item.price, currency)} each</Typography>
                         </Box>
                       </Box>
                     ))}

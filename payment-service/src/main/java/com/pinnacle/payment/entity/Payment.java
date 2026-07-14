@@ -44,4 +44,9 @@ public class Payment {
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    // Optimistic lock: concurrent verify/webhook updates to the same payment fail with a
+    // conflict (409) instead of silently overwriting each other (lost update / double-process).
+    @Version
+    private Long version;
 }

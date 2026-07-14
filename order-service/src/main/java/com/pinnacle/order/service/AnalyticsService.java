@@ -1,11 +1,9 @@
 package com.pinnacle.order.service;
 
 import com.pinnacle.order.entity.Order;
-import com.pinnacle.order.entity.OrderItem;
 import com.pinnacle.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -13,76 +11,63 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
+/**
+ * Aggregates order data into the analytics payload consumed by the vendor
+ * Analytics dashboard (salesOverTime, categoryBreakdown) and nested by report-service.
+ * When vendorId is null/blank the aggregation is platform-wide.
+ */
 @Service
 @RequiredArgsConstructor
 public class AnalyticsService {
 
-    private static final int RECENT_DAYS = 7;
+    // Orders in these states are not counted as realised sales / revenue.
+    private static final Set<String> NON_SALE_STATUSES = Set.of("CANCELLED", "FAILED");
 
     private final OrderRepository orderRepository;
 
-    @Transactional(readOnly = true)
     public Map<String, Object> analytics(String vendorId) {
-        List<Order> orders = (vendorId == null || vendorId.isBlank())
-                ? orderRepository.findAll()
-                : orderRepository.search(null, vendorId, null);
+        String vendorFilter = (vendorId != null && !vendorId.isBlank()) ? vendorId : null;
+        List<Order> orders = orderRepository.search(null, vendorFilter, null);
+
+        List<Order> sales = orders.stream()
+                .filter(o -> o.getStatus() == null || !NON_SALE_STATUSES.contains(o.getStatus()))
+                .collect(Collectors.toList());
+
+        BigDecimal totalRevenue = sales.stream()
+                .map(o -> o.getTotalAmount() != null ? o.getTotalAmount() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Sales over time: revenue grouped by day, chronologically ordered (TreeMap).
+        Map<LocalDate, BigDecimal> byDate = new TreeMap<>();
+        for (Order o : sales) {
+            if (o.getCreatedAt() == null) {
+                continue;
+            }
+            LocalDate day = o.getCreatedAt().toLocalDate();
+            BigDecimal amount = o.getTotalAmount() != null ? o.getTotalAmount() : BigDecimal.ZERO;
+            byDate.merge(day, amount, BigDecimal::add);
+        }
+        List<Map<String, Object>> salesOverTime = byDate.entrySet().stream()
+                .map(e -> {
+                    Map<String, Object> point = new LinkedHashMap<>();
+                    point.put("date", e.getKey().toString());
+                    point.put("sales", e.getValue());
+                    return point;
+                })
+                .collect(Collectors.toList());
 
         Map<String, Object> result = new LinkedHashMap<>();
-
-        BigDecimal totalRevenue = BigDecimal.ZERO;
-        Map<String, Long> ordersByStatus = new LinkedHashMap<>();
-        Map<LocalDate, BigDecimal> revenueByDayMap = new LinkedHashMap<>();
-        Map<String, Integer> productQty = new LinkedHashMap<>();
-
-        LocalDate cutoff = LocalDate.now().minusDays(RECENT_DAYS - 1L);
-
-        for (Order order : orders) {
-            BigDecimal amount = order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO;
-            totalRevenue = totalRevenue.add(amount);
-
-            String status = order.getStatus() != null ? order.getStatus() : "UNKNOWN";
-            ordersByStatus.merge(status, 1L, Long::sum);
-
-            if (order.getCreatedAt() != null) {
-                LocalDate day = order.getCreatedAt().toLocalDate();
-                if (!day.isBefore(cutoff)) {
-                    revenueByDayMap.merge(day, amount, BigDecimal::add);
-                }
-            }
-
-            if (order.getItems() != null) {
-                for (OrderItem item : order.getItems()) {
-                    productQty.merge(item.getProductId(), item.getQuantity(), Integer::sum);
-                }
-            }
-        }
-
-        List<Map<String, Object>> revenueByDay = new ArrayList<>();
-        for (int i = 0; i < RECENT_DAYS; i++) {
-            LocalDate day = cutoff.plusDays(i);
-            Map<String, Object> entry = new LinkedHashMap<>();
-            entry.put("date", day.toString());
-            entry.put("revenue", revenueByDayMap.getOrDefault(day, BigDecimal.ZERO));
-            revenueByDay.add(entry);
-        }
-
-        List<Map<String, Object>> topProducts = productQty.entrySet().stream()
-                .sorted((a, b) -> b.getValue() - a.getValue())
-                .limit(5)
-                .map(e -> {
-                    Map<String, Object> m = new LinkedHashMap<>();
-                    m.put("productId", e.getKey());
-                    m.put("quantity", e.getValue());
-                    return m;
-                })
-                .collect(java.util.stream.Collectors.toList());
-
-        result.put("totalOrders", (long) orders.size());
+        result.put("totalOrders", orders.size());
+        result.put("totalSales", sales.size());
         result.put("totalRevenue", totalRevenue);
-        result.put("ordersByStatus", ordersByStatus);
-        result.put("revenueByDay", revenueByDay);
-        result.put("topProducts", topProducts);
+        result.put("salesOverTime", salesOverTime);
+        // Category breakdown needs product categories that live in product-service; the
+        // dashboard renders an empty-state gracefully when this list is empty.
+        result.put("categoryBreakdown", new ArrayList<>());
         return result;
     }
 }

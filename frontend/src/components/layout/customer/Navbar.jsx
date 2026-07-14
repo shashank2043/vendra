@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Box, TextField, IconButton, Badge, Menu, MenuItem, Avatar, InputAdornment } from '@mui/material';
+import { AppBar, Toolbar, Typography, Box, TextField, IconButton, Badge, Menu, MenuItem, Avatar, InputAdornment, Select } from '@mui/material';
 import { Search, Heart, ShoppingCart, LogOut, Package } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../../app/hooks';
 import { logout } from '../../../features/auth/authSlice';
 import { selectCartCount } from '../../../features/customer/cart/cartSlice';
+import { selectCurrency, setCurrency, CURRENCIES } from '../../../features/currency/currencySlice';
+import ThemeToggle from '../../common/ThemeToggle';
 import NotificationBell from '../../../features/notifications/components/NotificationBell';
 import NotificationDropdown from '../../../features/notifications/components/NotificationDropdown';
 import CartDrawer from './CartDrawer'; // We will create this drawer in components/layout/customer/ or components/CartDrawer.jsx
@@ -16,6 +18,7 @@ const Navbar = () => {
   const { user } = useAppSelector((state) => state.auth);
   const cartCount = useAppSelector(selectCartCount);
   const wishlistCount = useAppSelector((state) => state.wishlist.productIds.length);
+  const currency = useAppSelector(selectCurrency);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
@@ -112,6 +115,20 @@ const Navbar = () => {
 
           {/* Right action icons */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, md: 1.5 } }}>
+            {/* Currency selector (auto-detected from locale, overridable) */}
+            <Select
+              size="small"
+              value={currency}
+              onChange={(e) => dispatch(setCurrency(e.target.value))}
+              variant="standard"
+              disableUnderline
+              sx={{ fontSize: '0.8rem', fontWeight: 700, color: 'text.secondary', '& .MuiSelect-select': { py: 0.5 } }}
+            >
+              {CURRENCIES.map((c) => (
+                <MenuItem key={c} value={c} sx={{ fontSize: '0.8rem' }}>{c}</MenuItem>
+              ))}
+            </Select>
+
             {/* Wishlist */}
             <IconButton 
               color="inherit" 
@@ -140,6 +157,9 @@ const Navbar = () => {
                 <ShoppingCart size={22} />
               </Badge>
             </IconButton>
+
+            {/* Theme toggle */}
+            <ThemeToggle />
 
             {/* Notifications */}
             <NotificationBell onClick={handleNotifOpen} />
